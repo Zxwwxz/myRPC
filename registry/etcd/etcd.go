@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/ibinarytree/koala/registry/base"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -33,6 +34,8 @@ type EtcdPlugin struct {
 	allServiceValue atomic.Value
 	//注册服务的对象
 	registerService *RegisterService
+	//etcd锁
+	lock sync.Mutex
 }
 
 //存储所有服务信息结构
@@ -118,7 +121,16 @@ func (e *EtcdPlugin)GetService(ctx context.Context,serviceName string)(service *
 		return
 	}
 	//没有进行etcd拉取，进行存储
+	//加锁为了防止同一个服务因为没有缓存全部去请求
+	e.lock.Lock()
+	defer e.lock.Unlock()
+	//再次检测缓存中有直接返回
+	service = e.getLocalServiceInfo(serviceName)
+	if service != nil {
+		return
+	}
 	path := e.getServicePath(serviceName)
+	//用前缀读
 	resp ,err := e.client.Get(ctx,path,clientv3.WithPrefix())
 	if err != nil{
 		fmt.Println("etcd get err:",err)
