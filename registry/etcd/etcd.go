@@ -25,11 +25,11 @@ const(
 
 type EtcdPlugin struct {
 	//插件参数
-	options *base.RegisterOptions
+	options *registryBase.RegisterOptions
 	//连接etcd客户端
 	client *clientv3.Client
 	//注册服务通道
-	registerChan chan *base.Service
+	registerChan chan *registryBase.Service
 	//存储所有服务
 	allServiceValue atomic.Value
 	//注册服务的对象
@@ -40,7 +40,7 @@ type EtcdPlugin struct {
 
 //存储所有服务信息结构
 type AllServiceInfo struct {
-	allServiceMap map[string]*base.Service
+	allServiceMap map[string]*registryBase.Service
 }
 
 //注册服务的结构
@@ -50,7 +50,7 @@ type RegisterService struct {
 	//续期回复通道
 	heartChan <-chan *clientv3.LeaseKeepAliveResponse
 	//注册服务信息
-	service *base.Service
+	service *registryBase.Service
 	//是否注册
 	registered bool
 }
@@ -59,7 +59,7 @@ var EtcdPluginObj = &EtcdPlugin{}
 
 func init()  {
 	//进行注册到插件管理器
-	err := base.PluginManager.RegisterPlugin(EtcdPluginObj)
+	err := registryBase.PluginManager.RegisterPlugin(EtcdPluginObj)
 	if err != nil {
 		fmt.Println("RegisterPlugin err:",err)
 	}
@@ -72,9 +72,9 @@ func (e *EtcdPlugin)Name()(name string){
  	return EtcdPluginName
  }
 //初始化
-func (e *EtcdPlugin)Init(ctx context.Context,registerOptionFuncs ...base.RegisterOptionFunc)(err error){
+func (e *EtcdPlugin)Init(ctx context.Context,registerOptionFuncs ...registryBase.RegisterOptionFunc)(err error){
 	//获得参数
-	e.options = &base.RegisterOptions{}
+	e.options = &registryBase.RegisterOptions{}
 	for _,v := range registerOptionFuncs{
 		v(e.options)
 	}
@@ -91,15 +91,15 @@ func (e *EtcdPlugin)Init(ctx context.Context,registerOptionFuncs ...base.Registe
 
 	//存储初始所有服务信息
 	allServiceInfo := &AllServiceInfo{
-		allServiceMap:make(map[string]*base.Service,MaxServiceNum),
+		allServiceMap:make(map[string]*registryBase.Service,MaxServiceNum),
 	}
 	e.allServiceValue.Store(allServiceInfo)
 
-	e.registerChan = make(chan *base.Service,MaxRegisterServiceNum)
+	e.registerChan = make(chan *registryBase.Service,MaxRegisterServiceNum)
 	return
 }
 //注册服务中的节点
-func (e *EtcdPlugin)Register(ctx context.Context,service *base.Service)(err error){
+func (e *EtcdPlugin)Register(ctx context.Context,service *registryBase.Service)(err error){
 	//放入通道中，自然有协程会取
 	select {
 	case e.registerChan <- service:
@@ -109,12 +109,12 @@ func (e *EtcdPlugin)Register(ctx context.Context,service *base.Service)(err erro
 	return
 }
 //反注册服务中的节点
-func (e *EtcdPlugin)UnRegister(ctx context.Context,service *base.Service)(err error){
+func (e *EtcdPlugin)UnRegister(ctx context.Context,service *registryBase.Service)(err error){
 	//有租期无需反注册
 	return
 }
 //获取服务
-func (e *EtcdPlugin)GetService(ctx context.Context,serviceName string)(service *base.Service,err error){
+func (e *EtcdPlugin)GetService(ctx context.Context,serviceName string)(service *registryBase.Service,err error){
 	//缓存中有直接返回
 	service = e.getLocalServiceInfo(serviceName)
 	if service != nil {
@@ -135,16 +135,16 @@ func (e *EtcdPlugin)GetService(ctx context.Context,serviceName string)(service *
 	if err != nil{
 		fmt.Println("etcd get err:",err)
 	}
-	service = &base.Service{}
+	service = &registryBase.Service{}
 	for _,v := range resp.Kvs{
-		tempService := &base.Service{}
+		tempService := &registryBase.Service{}
 		err := json.Unmarshal(v.Value,tempService)
 		if err != nil {
 			continue
 		}
 		service.SvrName = tempService.SvrName
 		service.SvrType = tempService.SvrType
-		service.SvrNodes = make(map[int]*base.Node)
+		service.SvrNodes = make(map[int]*registryBase.Node)
 		for _, node := range tempService.SvrNodes {
 			service.SvrNodes[node.NodeId] = node
 		}
@@ -189,7 +189,7 @@ func (e *EtcdPlugin)updateAllServiceInfo()(err error)  {
 		return errors.New("allServiceValue Load fail")
 	}
 	var allServiceInfoNew = &AllServiceInfo{
-		allServiceMap: make(map[string]*base.Service, MaxServiceNum),
+		allServiceMap: make(map[string]*registryBase.Service, MaxServiceNum),
 	}
 	//旧缓存中的服务，逐一去etcd拉取更新
 	for _,oldService := range allServiceInfoOld.allServiceMap{
@@ -199,13 +199,13 @@ func (e *EtcdPlugin)updateAllServiceInfo()(err error)  {
 			allServiceInfoNew.allServiceMap[oldService.SvrName]=oldService
 			continue
 		}
-		newService := &base.Service{
+		newService := &registryBase.Service{
 			SvrName:oldService.SvrName,
 			SvrType:oldService.SvrType,
-			SvrNodes: map[int]*base.Node{},
+			SvrNodes: map[int]*registryBase.Node{},
 		}
 		for _,v := range resp.Kvs{
-			tempService := &base.Service{}
+			tempService := &registryBase.Service{}
 			err := json.Unmarshal(v.Value,tempService)
 			if err != nil {
 				continue
@@ -283,7 +283,7 @@ func (e *EtcdPlugin)checkServiceInfo()(err error) {
 	return
 }
 
-func (e *EtcdPlugin)getLocalServiceInfo(serviceName string)(service *base.Service){
+func (e *EtcdPlugin)getLocalServiceInfo(serviceName string)(service *registryBase.Service){
 	allServiceInfo,ok := e.allServiceValue.Load().(*AllServiceInfo)
 	if ok == false || allServiceInfo == nil {
 		return nil
@@ -299,8 +299,8 @@ func (e *EtcdPlugin)getServicePath(serviceName string)(path string){
 	return fmt.Sprintf("%s/%s",e.options.RegisterPath,serviceName)
 }
 
-func (e *EtcdPlugin)getServiceNodePath(service *base.Service)(path string){
-	var node *base.Node
+func (e *EtcdPlugin)getServiceNodePath(service *registryBase.Service)(path string){
+	var node *registryBase.Node
 	for _,v := range service.SvrNodes{
 		node = v
 	}

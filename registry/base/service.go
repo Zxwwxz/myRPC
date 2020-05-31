@@ -1,4 +1,4 @@
-package base
+package registryBase
 
 type Service struct {
 	//服务名

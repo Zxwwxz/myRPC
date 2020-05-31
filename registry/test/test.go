@@ -9,20 +9,20 @@ import (
 )
 
 func main()  {
-	tecdPlugin,err := base.PluginManager.InitPlugin(context.TODO(),etcd.EtcdPluginName,
-		base.SetRegisterAddrs([]string{"47.92.212.70:2379"}),
-		base.SetRegisterPath("/myRPC"),
-		base.SetRegisterTimeOut(2 * time.Second),
-		base.SetHeartTimeOut(5))
+	tecdPlugin,err := registryBase.PluginManager.InitPlugin(context.TODO(),etcd.EtcdPluginName,
+		registryBase.SetRegisterAddrs([]string{"47.92.212.70:2379"}),
+		registryBase.SetRegisterPath("/myRPC"),
+		registryBase.SetRegisterTimeOut(2 * time.Second),
+		registryBase.SetHeartTimeOut(5))
 	if err != nil {
 		fmt.Println("初始化失败:",err)
 		return
 	}
-	node := &base.Node{NodeId:2,NodeIp:"127.0.0.2",NodePort:"1000",NodeVersion:100,NodeWeight:1,NodeFuncs:[]string{"func1,func2"}}
-	service := &base.Service{
+	node := &registryBase.Node{NodeId:2,NodeIp:"127.0.0.2",NodePort:"1000",NodeVersion:100,NodeWeight:1,NodeFuncs:[]string{"func1,func2"}}
+	service := &registryBase.Service{
 		SvrName:"serB",
 		SvrType:1001,
-		SvrNodes: map[int]*base.Node{
+		SvrNodes: map[int]*registryBase.Node{
 			2:node,
 		},
 	}
