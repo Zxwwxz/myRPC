@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ibinarytree/koala/registry/base"
-	"github.com/ibinarytree/koala/registry/etcd"
+	"myRPC/registry/base"
+	"myRPC/registry/etcd"
 	"time"
 )
 

@@ -3,7 +3,7 @@ package balanceBase
 import (
 	"context"
 	"errors"
-	registryBase "github.com/ibinarytree/koala/registry/base"
+	registryBase "myRPC/registry/base"
 )
 
 type WeightRoundBalance struct {

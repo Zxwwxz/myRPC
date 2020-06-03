@@ -1,4 +1,4 @@
-module github.com/ibinarytree/koala
+module myRPC
 
 go 1.13
 
@@ -39,6 +39,7 @@ require (
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	google.golang.org/appengine v1.4.0 // indirect
+	google.golang.org/grpc v1.19.0
 	gopkg.in/yaml.v2 v2.2.4
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )

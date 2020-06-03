@@ -2,7 +2,7 @@ package balanceBase
 
 import (
 	"context"
-	registryBase "github.com/ibinarytree/koala/registry/base"
+	registryBase "myRPC/registry/base"
 )
 
 type BalanceInterface interface {
