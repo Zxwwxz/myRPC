@@ -5,6 +5,7 @@ import "github.com/ibinarytree/proto"
 type Option struct {
 	ProtoPath      string
 	OutputPath     string
+	ImportPreFix   string
 	GenClientCode  bool
 	GenServerCode  bool
 }
@@ -15,5 +16,6 @@ type ServiceMetaData struct {
 	Rpc      []*proto.RPC
 	Package  *proto.Package
 	ServiceName      string
+	ImportPreFix     string
 }
 

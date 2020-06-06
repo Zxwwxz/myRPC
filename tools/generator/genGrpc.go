@@ -19,7 +19,7 @@ func(g *generatorGrpc)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData)
 	if err != nil {
 		return err
 	}
-	fullParams := fmt.Sprintf("plugin=grpc:%s/generate/",opt.OutputPath)
+	fullParams := fmt.Sprintf("plugins=grpc:%s/generate/",opt.OutputPath)
 	cmd := exec.Command("protoc","--go_out",fullParams,opt.ProtoPath)
 	err = cmd.Run()
 	if err != nil {

@@ -60,5 +60,12 @@ func (g *generatorMeta) handlePackage(r *proto.Package) {
 func (g *generatorMeta) handleOtherParams(opt *toolsBase.Option) {
 	serviceName := opt.ProtoPath[:len(opt.ProtoPath)-6]
 	g.meta.ServiceName = serviceName
+	if opt.OutputPath == ""{
+		opt.OutputPath = toolsBase.OutPath
+	}
 	opt.OutputPath = path.Join(opt.OutputPath,serviceName)
+	if opt.ImportPreFix == ""{
+		opt.ImportPreFix = toolsBase.Prefix
+	}
+	g.meta.ImportPreFix = path.Join(opt.ImportPreFix,serviceName)
 }

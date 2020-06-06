@@ -9,7 +9,16 @@ message HelloResponse {
   string reply = 1;
 }
 
+message ByeRequest {
+  string name = 1;
+}
+
+message ByeResponse {
+  string reply = 1;
+}
+
+
 service HelloService {
-  //sayhello 方法
   rpc SayHello(HelloRequest) returns (HelloResponse){}
+  rpc SayBye(ByeRequest) returns (ByeResponse){}
 }

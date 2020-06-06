@@ -8,11 +8,9 @@ import (
 
 var dirList = []string{
 	"controller",
-	"ild",
 	"scripts",
-	"conf",
-	"app/router",
-	"app/config",
+	"router",
+	"config",
 	"model",
 	"generate",
 	"main",

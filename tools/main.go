@@ -16,14 +16,17 @@ func main()  {
 
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:        "f",
+			Name:        "p",
 			Required:    true,
 			Destination: &opt.ProtoPath,
 		},
 		cli.StringFlag{
 			Name:        "o",
-			Value:       "../myService",
 			Destination: &opt.OutputPath,
+		},
+		cli.StringFlag{
+			Name:        "i",
+			Destination: &opt.ImportPreFix,
 		},
 		cli.BoolFlag{
 			Name:        "c",
