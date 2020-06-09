@@ -4,7 +4,9 @@ package router
 import (
 	"context"
 	"fmt"
+	"myRPC/meta"
 	mwBase "myRPC/middleware/base"
+	mwPrometheus "myRPC/middleware/prometheus"
 	"myRPC/myService/hello/controller"
 	pbHello "myRPC/myService/hello/generate"
 )
@@ -30,7 +32,12 @@ func (s *Router)MwSayHello2(wareFunc mwBase.MiddleWareFunc) (mwBase.MiddleWareFu
 }
 
 func (s *Router)SayHello(ctx context.Context, req *pbHello.HelloRequest) (rsp *pbHello.HelloResponse, err error) {
-	resultMw := mwBase.Chain(s.MwSayHello1,s.MwSayHello2)
+	serverMeta := &meta.ServerMeta{
+		ServiceName:"hello",
+		ServiceMethod:"SayHello",
+	}
+	ctx = meta.SetServerMeta(ctx,serverMeta)
+	resultMw := mwBase.Chain(s.MwSayHello1,s.MwSayHello2,mwPrometheus.PrometheusServerMiddleware)
 	resultMwFunc := resultMw(s.MwFuncSayHello)
 	newRsp,err := resultMwFunc(ctx,req)
 	rsp = newRsp.(*pbHello.HelloResponse)
