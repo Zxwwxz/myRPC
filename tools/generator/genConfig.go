@@ -21,7 +21,7 @@ func(g *generatorConfig)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 }
 
 func(g *generatorConfig)CreateFile(env string,opt *toolsBase.Option,meta *toolsBase.ServiceMetaData)(err error){
-	filename := path.Join(opt.OutputPath, env, "/config.yaml")
+	filename := path.Join(opt.OutputPath, "config/",env, "/config.yaml")
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
