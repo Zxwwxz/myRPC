@@ -3,22 +3,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	pbHello "myRPC/myService/hello/generate"
 	"myRPC/myService/hello/router"
+	"myRPC/service"
 	"net"
-	"net/http"
 )
 
 func main()  {
-	go promethusListen()
+	initService()
 	grpcListen()
 }
 
-func promethusListen() {
-	http.Handle("/metrics",promhttp.Handler())
-	fmt.Println(http.ListenAndServe(":9091",nil))
+func initService() {
+	service.Init()
 }
 
 func grpcListen() {

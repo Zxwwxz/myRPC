@@ -19,6 +19,7 @@ func(g *GeneratorMgr)Register(){
 		NewGeneratorMain(),
 		NewGeneratorRouter(),
 		NewGeneratorCtr(),
+		NewGeneratorConfig(),
 	)
 }
 
