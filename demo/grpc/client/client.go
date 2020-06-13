@@ -8,7 +8,7 @@ import (
 )
 
 func main()  {
-	conn,err := grpc.Dial("127.0.0.1:8889",grpc.WithInsecure())
+	conn,err := grpc.Dial("127.0.0.1:8888",grpc.WithInsecure())
 	if err != nil {
 		fmt.Println("connect err:",err)
 	}

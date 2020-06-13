@@ -54,8 +54,10 @@ type LogConf struct {
 }
 
 type LimitConf struct {
-	QPSLimit int  `yaml:"qps"`
-	SwitchOn bool `yaml:"switch_on"`
+	SwitchOn bool     `yaml:"switch_on"`
+	QPSLimit float64  `yaml:"qps"`
+	AllWater int      `yaml:"all_water"`
+
 }
 
 type TraceConf struct {
@@ -67,6 +69,7 @@ type TraceConf struct {
 
 func initDir() (err error) {
 	exeFilePath, err := filepath.Abs(os.Args[0])
+	fmt.Println("lujing---------->:",exeFilePath)
 	if err != nil {
 		return
 	}
@@ -79,12 +82,11 @@ func initDir() (err error) {
 		return
 	}
 	serviceConf.RootDir = path.Join(strings.ToLower(exeFilePath[0:lastIdx]), "..")
-	serviceConf.ConfigDir = path.Join(serviceConf.RootDir, "./conf/", util.GetEnv(), "/config.yaml")
+	serviceConf.ConfigDir = path.Join(serviceConf.RootDir, "./config/", util.GetEnv(), "/config.yaml")
 	return
 }
 
 func InitConfig() (err error) {
-
 	err = initDir()
 	if err != nil {
 		return
@@ -100,7 +102,7 @@ func InitConfig() (err error) {
 		return
 	}
 
-	fmt.Printf("init koala conf succ, conf:%#v\n", serviceConf)
+	fmt.Printf("init conf succ, conf:%#v\n", serviceConf)
 	return
 }
 

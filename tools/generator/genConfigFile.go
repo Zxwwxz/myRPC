@@ -1,8 +1,8 @@
 package generator
 
 var configTemplateFile = `
-service_type:1001
-service_id:1
+service_type: 1001
+service_id: 1
 service_name: {{.ServiceName}}
 port: 8888
 prometheus:
@@ -23,6 +23,7 @@ log:
 limit:
   switch_on: true
   qps: 50000
+  all_water: 100
 trace:
   switch_on: true
   report_addr: http://127.0.0.1:9411/api/v1/spans

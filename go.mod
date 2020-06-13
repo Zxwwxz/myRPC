@@ -38,8 +38,11 @@ require (
 	github.com/urfave/cli v1.22.1
 	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/appengine v1.4.0 // indirect
 	google.golang.org/grpc v1.19.0
 	gopkg.in/yaml.v2 v2.2.4
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )
+
+replace golang.org/x/time => github.com/golang/time v0.0.0-20190308202827-9d24e82272b4
