@@ -5,8 +5,10 @@ import (
 	"google.golang.org/grpc"
 	"myRPC/config"
 	"myRPC/limit"
+	logOutputer "myRPC/log/outputer"
 	mwBase "myRPC/middleware/base"
 	mwLimit "myRPC/middleware/limit"
+	mwLog "myRPC/middleware/log"
 	mwPrometheus "myRPC/middleware/prometheus"
 	"net"
 )
@@ -28,6 +30,7 @@ func Init()  {
 	}
 	commonService.serviceConf = config.GetConf()
 	initLimit()
+	initLogger()
 }
 
 func Run() {
@@ -46,16 +49,27 @@ func GetGrpcService() *grpc.Server {
 	return commonService.Server
 }
 
-
 func initLimit() {
 	limiter := limit.NewTokenLimit(commonService.serviceConf.Limit.QPSLimit,commonService.serviceConf.Limit.AllWater)
 	commonService.Limiter = limiter
+}
+
+func initLogger() {
+	filename := fmt.Sprintf("%s/%s.log", commonService.serviceConf.Log.Dir, commonService.serviceConf.ServiceName)
+	outputer, err := logOutputer.NewFileOutputer(filename)
+	if err != nil {
+		return
+	}
+	logOutputer.InitLogger(commonService.serviceConf.Log.Level, commonService.serviceConf.Log.ChanSize, commonService.serviceConf.ServiceName)
+	logOutputer.AddOutputer(outputer)
+	return
 }
 
 func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
 	var middles []mwBase.MiddleWare
 	serviceConf := config.GetConf()
 	middles = append(middles,frontMiddles...)
+	middles = append(middles, mwLog.AccessMiddleware())
 	if serviceConf.Prometheus.SwitchOn {
 		middles = append(middles, mwPrometheus.PrometheusMiddleware())
 	}
