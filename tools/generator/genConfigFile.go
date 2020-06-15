@@ -3,6 +3,7 @@ package generator
 var configTemplateFile = `
 service_type: 1001
 service_id: 1
+service_ver: 1
 service_name: {{.ServiceName}}
 port: 8888
 prometheus:

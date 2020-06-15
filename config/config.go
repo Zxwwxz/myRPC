@@ -3,14 +3,13 @@ package config
 import (
 	"fmt"
 	"gopkg.in/yaml.v2"
-	"myRPC/util"
 	"io/ioutil"
+	"myRPC/util"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 var (
@@ -20,6 +19,7 @@ var (
 type ServiceConf struct {
 	ServiceType int            `yaml:"service_type"`
 	ServiceId   int            `yaml:"service_id"`
+	ServiceVer   int           `yaml:"service_ver"`
 	ServiceName string         `yaml:"service_name"`
 	Port        int            `yaml:"port"`
 	Prometheus  PrometheusConf `yaml:"prometheus"`
@@ -40,7 +40,7 @@ type PrometheusConf struct {
 type RegisterConf struct {
 	SwitchOn     bool          `yaml:"switch_on"`
 	RegisterPath string        `yaml:"register_path"`
-	Timeout      time.Duration `yaml:"timeout"`
+	Timeout      int64         `yaml:"timeout"`
 	HeartBeat    int64         `yaml:"heart_beat"`
 	RegisterName string        `yaml:"register_name"`
 	RegisterAddr string        `yaml:"register_addr"`

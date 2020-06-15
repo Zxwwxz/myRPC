@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"google.golang.org/grpc"
 	"myRPC/config"
@@ -10,7 +11,11 @@ import (
 	mwLimit "myRPC/middleware/limit"
 	mwLog "myRPC/middleware/log"
 	mwPrometheus "myRPC/middleware/prometheus"
+	registryBase "myRPC/registry/base"
+	"myRPC/util"
 	"net"
+	"strconv"
+	"time"
 )
 
 var commonService = &CommonService{
@@ -31,6 +36,7 @@ func Init()  {
 	commonService.serviceConf = config.GetConf()
 	initLimit()
 	initLogger()
+	initRegister()
 }
 
 func Run() {
@@ -63,6 +69,38 @@ func initLogger() {
 	logOutputer.InitLogger(commonService.serviceConf.Log.Level, commonService.serviceConf.Log.ChanSize, commonService.serviceConf.ServiceName)
 	logOutputer.AddOutputer(outputer)
 	return
+}
+
+func initRegister() {
+	serviceConf := commonService.serviceConf
+	registerConf := serviceConf.Regiser
+	if !registerConf.SwitchOn {
+		return
+	}
+	localIp := util.GetLocalIP()
+	tecdPlugin,err := registryBase.PluginManager.InitPlugin(context.TODO(),
+		registerConf.RegisterName,
+		registryBase.SetRegisterAddrs([]string{registerConf.RegisterAddr}),
+		registryBase.SetRegisterPath(registerConf.RegisterPath),
+		registryBase.SetRegisterTimeOut(time.Duration(registerConf.Timeout)*time.Second),
+		registryBase.SetHeartTimeOut(registerConf.HeartBeat))
+	if err != nil {
+		fmt.Println("初始化失败:",err)
+		return
+	}
+	node := &registryBase.Node{NodeId:serviceConf.ServiceId,NodeIp:localIp,NodePort:strconv.Itoa(serviceConf.Port),NodeVersion:serviceConf.ServiceVer,NodeWeight:1,NodeFuncs:[]string{}}
+	service := &registryBase.Service{
+		SvrName:serviceConf.ServiceName,
+		SvrType:serviceConf.ServiceId,
+		SvrNodes: map[int]*registryBase.Node{
+			serviceConf.ServiceId:node,
+		},
+	}
+	err = tecdPlugin.Register(context.TODO(),service)
+	if err != nil {
+		fmt.Println("注册失败")
+		return
+	}
 }
 
 func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
