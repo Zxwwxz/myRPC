@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
+	mwTrace "myRPC/middleware/trace"
+	"myRPC/trace"
 	"google.golang.org/grpc"
 	"myRPC/config"
 	"myRPC/limit"
@@ -37,6 +39,7 @@ func Init()  {
 	initLimit()
 	initLogger()
 	initRegister()
+	initTrace()
 }
 
 func Run() {
@@ -103,6 +106,19 @@ func initRegister() {
 	}
 }
 
+func initTrace() {
+	serviceConf := commonService.serviceConf
+	traceConf := serviceConf.Trace
+	if !traceConf.SwitchOn {
+		return
+	}
+	err := trace.Init(serviceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
+	if err != nil {
+		fmt.Println("初始化追踪失败")
+		return
+	}
+}
+
 func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
 	var middles []mwBase.MiddleWare
 	serviceConf := config.GetConf()
@@ -113,6 +129,9 @@ func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles
 	}
 	if serviceConf.Limit.SwitchOn {
 		middles = append(middles, mwLimit.LimitMiddleware(commonService.Limiter))
+	}
+	if serviceConf.Trace.SwitchOn {
+		middles = append(middles, mwTrace.TraceMiddleware())
 	}
 	middles = append(middles,backMiddles...)
 	m := mwBase.Chain(middles...)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"myRPC/demo/grpc/pbHello"
 )
 
@@ -14,6 +15,8 @@ func main()  {
 	}
 	defer conn.Close()
 	c := pbHello.NewHelloServiceClient(conn)
+	ctx := context.Background()
+	ctx = metadata.AppendToOutgoingContext(ctx,"req_key","req_value")
 	resp,err := c.SayHello(context.TODO(),&pbHello.HelloRequest{Name:"zzz"})
 	if err != nil {
 		fmt.Println("rpc call err:",err)

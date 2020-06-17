@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"myRPC/demo/grpc/pbHello"
 	"net"
 )
@@ -11,6 +12,10 @@ import (
 type server struct {}
 
 func (s *server)SayHello(ctx context.Context, req *pbHello.HelloRequest) (rsp *pbHello.HelloResponse, err error) {
+	md ,ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		fmt.Println("md:",md)
+	}
 	rsp = &pbHello.HelloResponse{}
 	rsp.Reply = req.Name+" good"
 	return rsp,nil
