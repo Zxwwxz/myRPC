@@ -28,14 +28,6 @@ func main()  {
 			Name:        "i",
 			Destination: &opt.ImportPreFix,
 		},
-		cli.BoolFlag{
-			Name:        "c",
-			Destination: &opt.GenClientCode,
-		},
-		cli.BoolFlag{
-			Name:        "s",
-			Destination: &opt.GenServerCode,
-		},
 	}
 	app.Action = func(c *cli.Context) error {
 		generator.GeneratorMgrObj.Register()

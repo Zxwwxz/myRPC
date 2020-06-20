@@ -7,6 +7,7 @@ import (
 )
 
 var dirList = []string{
+	"client",
 	"controller",
 	"scripts",
 	"router",

@@ -11,7 +11,7 @@ import (
 
 func main()  {
 	service.Init()
-	pbHello.RegisterHelloServiceServer(service.GetGrpcService(),&router.Router{})
+	{{.Package.Name}}.Register{{$.Service.Name}}Server(service.GetGrpcService(),&router.Router{})
 	service.Run()
 }
 

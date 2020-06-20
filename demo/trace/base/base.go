@@ -11,7 +11,7 @@ import (
 
 func Init(service string) (opentracing.Tracer, io.Closer) {
 	transport, err := zipkin.NewHTTPTransport(
-		"http://60.205.218.189:9411/api/v1/spans",
+		"http://47.92.212.70:9411/api/v1/spans",
 		zipkin.HTTPBatchSize(1),
 		zipkin.HTTPLogger(jaeger.StdLogger),
 	)

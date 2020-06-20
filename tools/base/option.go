@@ -6,8 +6,6 @@ type Option struct {
 	ProtoPath      string
 	OutputPath     string
 	ImportPreFix   string
-	GenClientCode  bool
-	GenServerCode  bool
 }
 
 type ServiceMetaData struct {

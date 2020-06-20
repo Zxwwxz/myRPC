@@ -5,6 +5,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"myRPC/demo/trace/base"
+	"time"
 )
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 func formatString(ctx context.Context) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
+	time.Sleep(2*time.Second)
 	span.SetTag("formatString_tag_key", "formatString_tag_value")
 	span.LogFields(log.String("formatString_fields_key", "formatString_fields_value"))
 	span.LogKV("formatString_kv_key", "formatString_kv_value")
@@ -32,6 +34,7 @@ func formatString(ctx context.Context) {
 func printHello(ctx context.Context) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "formatString")
 	defer span.Finish()
+	time.Sleep(3*time.Second)
 	span.SetTag("printHello_tag_key", "printHello_tag_value")
 	span.LogFields(log.String("printHello_fields_key", "printHello_fields_value"))
 	span.LogKV("printHello_kv_key", "printHello_kv_value")
