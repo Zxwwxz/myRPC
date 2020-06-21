@@ -33,6 +33,27 @@ func NewServerMetrics() *Metrics {
 		),
 	}
 }
+
+//生成client metrics实例
+func NewClientMetrics() *Metrics {
+	return &Metrics{
+		requestCounter: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "client_request",
+			}, []string{"service", "method"}),
+		errcodeCounter: promauto.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "client_request_errcode",
+			}, []string{"service", "method", "grpc_code"}),
+		latencySummary: promauto.NewSummaryVec(
+			prometheus.SummaryOpts{
+				Name:       "client_request_time",
+				Help:       "RPC latency distributions.",
+				Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+			}, []string{"service", "method"},
+		),
+	}
+}
 func (m *Metrics) IncRequest(ctx context.Context, serviceName, methodName string) {
 	m.requestCounter.WithLabelValues(serviceName, methodName).Inc()
 }

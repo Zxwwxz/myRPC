@@ -123,15 +123,15 @@ func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles
 	var middles []mwBase.MiddleWare
 	serviceConf := config.GetConf()
 	middles = append(middles,frontMiddles...)
-	middles = append(middles, mwLog.AccessMiddleware())
+	middles = append(middles, mwLog.AccessServiceMiddleware())
 	if serviceConf.Prometheus.SwitchOn {
-		middles = append(middles, mwPrometheus.PrometheusMiddleware())
+		middles = append(middles, mwPrometheus.PrometheusServiceMiddleware())
 	}
 	if serviceConf.Limit.SwitchOn {
 		middles = append(middles, mwLimit.LimitMiddleware(commonService.Limiter))
 	}
 	if serviceConf.Trace.SwitchOn {
-		middles = append(middles, mwTrace.TraceMiddleware())
+		middles = append(middles, mwTrace.TraceServiceMiddleware())
 	}
 	middles = append(middles,backMiddles...)
 	m := mwBase.Chain(middles...)

@@ -10,8 +10,13 @@ import (
 	wmConn "myRPC/middleware/conn"
 	mwDiscover "myRPC/middleware/discover"
 	mwHystrix "myRPC/middleware/hystrix"
+	mwLimit "myRPC/middleware/limit"
 	mwLoadBalance "myRPC/middleware/loadBalance"
+	mwLog "myRPC/middleware/log"
+	mwPrometheus "myRPC/middleware/prometheus"
+	mwTrace "myRPC/middleware/trace"
 	registryBase "myRPC/registry/base"
+	"myRPC/trace"
 	"time"
 )
 
@@ -41,12 +46,19 @@ func NewKoalaClient() *CommonClient {
 	client.balancer = balanceBase.NewRandomBalance()
 	limitConf := client.serviceConf.Limit
 	client.limiter = limit.NewTokenLimit(limitConf.QPSLimit,limitConf.AllWater)
+	traceConf := client.serviceConf.Trace
+	_ = trace.Init(client.serviceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
 	return client
 }
 
 func (client *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
 	var middles []mwBase.MiddleWare
 	middles = append(middles,frontMiddles...)
+	middles = append(middles,mwTrace.TraceIdClientMiddleware())
+	middles = append(middles,mwLog.AccessClientMiddleware())
+	middles = append(middles,mwTrace.TraceClientMiddleware())
+	middles = append(middles,mwPrometheus.PrometheusClientMiddleware())
+	middles = append(middles,mwLimit.LimitMiddleware(client.limiter))
 	middles = append(middles,mwHystrix.HystrixMiddleware())
 	middles = append(middles,mwDiscover.DiscoveryMiddleware(client.register))
 	middles = append(middles,mwLoadBalance.LoadBalanceMiddleware(client.balancer))
