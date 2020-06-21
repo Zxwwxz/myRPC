@@ -9,6 +9,7 @@ import (
 	mwBase "myRPC/middleware/base"
 	wmConn "myRPC/middleware/conn"
 	mwDiscover "myRPC/middleware/discover"
+	mwHystrix "myRPC/middleware/hystrix"
 	mwLoadBalance "myRPC/middleware/loadBalance"
 	registryBase "myRPC/registry/base"
 	"time"
@@ -46,6 +47,7 @@ func NewKoalaClient() *CommonClient {
 func (client *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
 	var middles []mwBase.MiddleWare
 	middles = append(middles,frontMiddles...)
+	middles = append(middles,mwHystrix.HystrixMiddleware())
 	middles = append(middles,mwDiscover.DiscoveryMiddleware(client.register))
 	middles = append(middles,mwLoadBalance.LoadBalanceMiddleware(client.balancer))
 	middles = append(middles,wmConn.ConnMiddleware())
