@@ -22,7 +22,7 @@ func (r *RoundBalance)GetName()(name string) {
 	return r.Name
 }
 
-func (r *RoundBalance)SelectNode(ctx context.Context,nodes []*registryBase.Node)(node *registryBase.Node,err error) {
+func (r *RoundBalance)SelectNode(ctx context.Context,nodes map[int]*registryBase.Node)(node *registryBase.Node,err error) {
 	nodeCount := len(nodes)
 	if nodeCount == 0 {
 		return nil,errors.New("nodes nil")
