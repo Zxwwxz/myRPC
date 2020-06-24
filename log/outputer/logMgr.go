@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	logBase "myRPC/log/base"
+	"myRPC/trace"
 	"path"
 	"time"
 )
@@ -108,7 +109,7 @@ func writeLog(ctx context.Context, level string, format string, args ...interfac
 		Level:       level,
 		Filename:    fileName,
 		LineNo:      lineNo,
-		TraceId:     logBase.GetTraceId(ctx),
+		TraceId:     trace.GetTraceId(ctx),
 		ServiceName: lm.serviceName,
 	}
 

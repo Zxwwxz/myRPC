@@ -4,8 +4,10 @@ package {{.ServiceName}}Client
 
 import (
 	"context"
+	"errors"
 	"google.golang.org/grpc"
 	"myRPC/client"
+	"myRPC/meta"
 	{{.Package.Name}} "{{.ImportPreFix}}/generate"
 )
 

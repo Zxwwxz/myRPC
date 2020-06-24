@@ -12,7 +12,7 @@ prometheus:
 register:
   switch_on: true
   register_path: /myRpc
-  timeout: 1s
+  timeout: 1
   heart_beat: 10
   register_name: etcd
   register_addr: 127.0.0.1:2379

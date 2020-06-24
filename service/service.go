@@ -30,18 +30,31 @@ type CommonService struct {
 	Limiter     limit.LimitInterface
 }
 
-func Init()  {
+func Init()(err error)  {
 	//初始化配置
-	err := config.InitConfig()
+	err = config.InitConfig()
 	if err != nil {
-		fmt.Println("InitConfig,err:",err)
+		return
 	}
 	commonService.serviceConf = config.GetConf()
 	//初始化
-	initLimit()
-	initLogger()
-	initRegister()
-	initTrace()
+	err = initLimit()
+	if err != nil {
+		return
+	}
+	err = initLogger()
+	if err != nil {
+		return
+	}
+	err = initRegister()
+	if err != nil {
+		return
+	}
+	err = initTrace()
+	if err != nil {
+		return
+	}
+	return
 }
 
 func Run() {
@@ -60,12 +73,13 @@ func GetGrpcService() *grpc.Server {
 	return commonService.Server
 }
 
-func initLimit() {
+func initLimit()(err error) {
 	limiter := limit.NewTokenLimit(commonService.serviceConf.Limit.QPSLimit,commonService.serviceConf.Limit.AllWater)
 	commonService.Limiter = limiter
+	return
 }
 
-func initLogger() {
+func initLogger()(err error) {
 	filename := fmt.Sprintf("%s/%s.log", commonService.serviceConf.Log.Dir, commonService.serviceConf.ServiceName)
 	outputer, err := logOutputer.NewFileOutputer(filename)
 	if err != nil {
@@ -76,7 +90,7 @@ func initLogger() {
 	return
 }
 
-func initRegister() {
+func initRegister()(err error) {
 	serviceConf := commonService.serviceConf
 	registerConf := serviceConf.Regiser
 	if !registerConf.SwitchOn {
@@ -90,7 +104,6 @@ func initRegister() {
 		registryBase.SetRegisterTimeOut(time.Duration(registerConf.Timeout)*time.Second),
 		registryBase.SetHeartTimeOut(registerConf.HeartBeat))
 	if err != nil {
-		fmt.Println("初始化失败:",err)
 		return
 	}
 	node := &registryBase.Node{NodeId:serviceConf.ServiceId,NodeIp:localIp,NodePort:strconv.Itoa(serviceConf.Port),NodeVersion:serviceConf.ServiceVer,NodeWeight:1,NodeFuncs:[]string{}}
@@ -103,22 +116,22 @@ func initRegister() {
 	}
 	err = tecdPlugin.Register(context.TODO(),service)
 	if err != nil {
-		fmt.Println("注册失败")
 		return
 	}
+	return
 }
 
-func initTrace() {
+func initTrace()(err error) {
 	serviceConf := commonService.serviceConf
 	traceConf := serviceConf.Trace
 	if !traceConf.SwitchOn {
 		return
 	}
-	err := trace.Init(serviceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
+	err = trace.Init(serviceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
 	if err != nil {
-		fmt.Println("初始化追踪失败")
 		return
 	}
+	return
 }
 
 //服务中间件

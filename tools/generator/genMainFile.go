@@ -4,13 +4,17 @@ var mainTemplateFile = `
 package main
 
 import (
+	"fmt"
 	{{.Package.Name}} "{{.ImportPreFix}}/generate"
 	"{{.ImportPreFix}}/router"
 	"myRPC/service"
 )
 
 func main()  {
-	service.Init()
+	err := service.Init()
+	if err != nil {
+		fmt.Println("init server err:",err)
+	}
 	{{.Package.Name}}.Register{{$.Service.Name}}Server(service.GetGrpcService(),&router.Router{})
 	service.Run()
 }

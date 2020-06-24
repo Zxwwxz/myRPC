@@ -81,7 +81,7 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 			opts := []opentracing.StartSpanOption{
 				opentracing.ChildOf(parentSpanCtx),
 				ext.SpanKindRPCClient,
-				opentracing.Tag{Key: string(ext.Component), Value: "client_treca"},
+				opentracing.Tag{Key: string(ext.Component), Value: "client_trace"},
 				opentracing.Tag{Key: "trace_id", Value: trace.GetTraceId(ctx)},
 			}
 			clientMeta := meta.GetClientMeta(ctx)
@@ -92,7 +92,7 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 			}
 			//span注入到http头
 			if err := tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, metadataTextMap(md)); err != nil {
-				return
+				return nil, err
 			}
 			ctx = metadata.NewOutgoingContext(ctx, md)
 			ctx = metadata.AppendToOutgoingContext(ctx, "trace_id", trace.GetTraceId(ctx))
