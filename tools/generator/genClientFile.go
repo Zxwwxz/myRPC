@@ -20,7 +20,11 @@ func NewClientCall() *{{.ServiceName}}Client {
 
 {{range .Rpc}}
 func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}, opts ...grpc.CallOption) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
-	middlewareFunc := client.BuildClientMiddleware(c.mwFunc{{.Name}},nil,nil)
+	clientObj,err := client.NewCommonClient()
+	if err != nil {
+		return
+	}
+	middlewareFunc := clientObj.BuildClientMiddleware(c.mwFuncLogin,nil,nil)
 	newRsp, err := middlewareFunc(ctx, req)
 	if err != nil {
 		return nil, err
@@ -30,9 +34,10 @@ func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package
 }
 
 func (c *{{$.ServiceName}}Client)mwFunc{{.Name}}(ctx context.Context, request interface{}) (resp interface{}, err error) {
-	conn, err := grpc.Dial("127.0.0.1:8889", grpc.WithInsecure())
-	if err != nil {
-		return nil, err
+	clientMeta := meta.GetClientMeta(ctx)
+	conn := clientMeta.Conn
+	if conn != nil {
+		return nil, errors.New("conn nil")
 	}
 	req := request.(*{{$.Package.Name}}.{{.RequestType}})
 	defer conn.Close()

@@ -35,7 +35,7 @@ type CommonClient struct {
 	balancer  loadBalance.BalanceInterface
 }
 
-func NewKoalaClient() (*CommonClient,error) {
+func NewCommonClient() (*CommonClient,error) {
 	//初始配置
 	client := &CommonClient{}
 	err := config.InitConfig()

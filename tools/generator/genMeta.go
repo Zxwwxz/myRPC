@@ -63,9 +63,7 @@ func (g *generatorMeta) handleOtherParams(opt *toolsBase.Option) {
 	if opt.OutputPath == ""{
 		opt.OutputPath = toolsBase.OutPath
 	}
-	opt.OutputPath = path.Join(opt.OutputPath,serviceName)
-	if opt.ImportPreFix == ""{
-		opt.ImportPreFix = toolsBase.Prefix
-	}
+	opt.ImportPreFix = toolsBase.OutPath
+	opt.OutputPath = path.Join("../../",opt.OutputPath,serviceName)
 	g.meta.ImportPreFix = path.Join(opt.ImportPreFix,serviceName)
 }

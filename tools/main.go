@@ -24,10 +24,6 @@ func main()  {
 			Name:        "o",
 			Destination: &opt.OutputPath,
 		},
-		cli.StringFlag{
-			Name:        "i",
-			Destination: &opt.ImportPreFix,
-		},
 	}
 	app.Action = func(c *cli.Context) error {
 		generator.GeneratorMgrObj.Register()
