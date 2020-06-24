@@ -16,8 +16,10 @@ import (
 	registryBase "myRPC/registry/base"
 	"myRPC/util"
 	"net"
+	"os"
 	"strconv"
 	"time"
+	_ "myRPC/registry/etcd"
 )
 
 var commonService = &CommonService{
@@ -80,6 +82,12 @@ func initLimit()(err error) {
 }
 
 func initLogger()(err error) {
+	if !util.IsFileExist(commonService.serviceConf.Log.Dir) {
+		err := os.Mkdir(commonService.serviceConf.Log.Dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 	filename := fmt.Sprintf("%s/%s.log", commonService.serviceConf.Log.Dir, commonService.serviceConf.ServiceName)
 	outputer, err := logOutputer.NewFileOutputer(filename)
 	if err != nil {

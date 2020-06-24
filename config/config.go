@@ -109,7 +109,7 @@ func InitConfig() (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Printf("init conf succ, conf:%#v\n", serviceConf)
+	//fmt.Printf("init conf succ, conf:%#v\n", serviceConf)
 	return
 }
 

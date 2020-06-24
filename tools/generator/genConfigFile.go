@@ -15,7 +15,7 @@ register:
   timeout: 1
   heart_beat: 10
   register_name: etcd
-  register_addr: 127.0.0.1:2379
+  register_addr: 47.92.212.70:2379
 log:
   level: debug
   path: ./logs/
@@ -27,7 +27,7 @@ limit:
   all_water: 100
 trace:
   switch_on: true
-  report_addr: http://127.0.0.1:9411/api/v1/spans
+  report_addr: http://47.92.212.70:9411/api/v1/spans
   sample_type: const
   sample_rate: 1
 `

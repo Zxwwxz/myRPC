@@ -16,6 +16,7 @@ func main()  {
 		fmt.Println("init server err:",err)
 	}
 	{{.Package.Name}}.Register{{$.Service.Name}}Server(service.GetGrpcService(),&router.Router{})
+	fmt.Println("init server success")	
 	service.Run()
 }
 
