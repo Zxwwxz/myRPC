@@ -26,9 +26,9 @@ func(b *Birthday)UnmarshalJSON(data []byte)(err error){
 
 type Person struct {
 	Id int64         `json:"id,string"`
-	Name string      `json:"name,omitempty"`
-	Age int          `json:"-"`
-	Day *Birthday    `json:"day"`
+	Name string      `json:"name,omitempty"`  //没有赋值，不序列化
+	Age int          `json:"-"`   //不管有没有赋值，都不序列化
+	Day *Birthday    `json:"day"` //自定义序列化
 }
 
 func main() {

@@ -1,4 +1,4 @@
-package logBase
+package trace
 
 import (
 	"context"

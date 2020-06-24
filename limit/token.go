@@ -6,8 +6,8 @@ import (
 
 type TokenLimit struct {
 	qps       float64        //令牌桶qps
-	allWater  int        //令牌桶最多能装的水大小
-	limiter   *rate.Limiter //开源限流器
+	allWater  int        	 //令牌桶最多能装的水大小
+	limiter   *rate.Limiter  //开源限流器
 }
 
 func NewTokenLimit(qps float64, allWater int) *TokenLimit {

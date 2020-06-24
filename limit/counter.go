@@ -8,7 +8,7 @@ import (
 type CounterLimit struct {
 	counterNum      int64 //计数器
 	limitNum        int64 //指定时间窗口内允许的最大请求数
-	intervalNano    int64 //指定的时间窗口
+	intervalNano    int64 //指定时间窗口
 	lastNano        int64 //unix时间戳,单位为纳秒
 }
 func NewCounterLimit(interval time.Duration, limit int64) *CounterLimit {

@@ -8,7 +8,7 @@ import (
 	"github.com/uber/jaeger-client-go/transport/zipkin"
 	"io"
 )
-
+//搭建java，elasticsearch，zipkin，jaeger
 func Init(service string) (opentracing.Tracer, io.Closer) {
 	transport, err := zipkin.NewHTTPTransport(
 		"http://47.92.212.70:9411/api/v1/spans",

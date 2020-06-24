@@ -1,7 +1,6 @@
 package trace
 
 import (
-	"fmt"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
@@ -15,7 +14,6 @@ func Init(serviceName, reportAddr, sampleType string, rate float64) (err error) 
 		zipkin.HTTPLogger(jaeger.StdLogger),
 	)
 	if err != nil {
-		fmt.Println("NewHTTPTransport err:",err)
 		return err
 	}
 	cfg := &config.Configuration{
@@ -33,7 +31,6 @@ func Init(serviceName, reportAddr, sampleType string, rate float64) (err error) 
 		config.Logger(jaeger.StdLogger),
 		config.Reporter(r))
 	if err != nil {
-		fmt.Println("NewTracer err:",err)
 		return err
 	}
 	opentracing.SetGlobalTracer(tracer)

@@ -12,6 +12,7 @@ func DiscoveryMiddleware(discovery registryBase.RegistryPlugin) mwBase.MiddleWar
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			rpcMeta := meta.GetClientMeta(ctx)
 			rpcMeta.AllNodes = make(map[int]*registryBase.Node)
+			//服务发现所有节点
 			service, err := discovery.GetService(ctx, rpcMeta.ServiceName)
 			if err != nil {
 				return

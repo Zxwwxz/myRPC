@@ -7,9 +7,9 @@ import (
 
 type BucketLimit struct {
 	rate       float64 //漏桶中水的漏出速率
+	curWater   float64 //当前桶里面的水
 	allWater   float64 //漏桶最多能装的水大小
 	unixNano   int64   //unix时间戳
-	curWater   float64 //当前桶里面的水
 }
 
 func NewBucketLimit(rate float64, allWater int64) *BucketLimit {

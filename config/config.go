@@ -1,5 +1,6 @@
 package config
 
+//服务的配置
 import (
 	"fmt"
 	"gopkg.in/yaml.v2"
@@ -32,11 +33,13 @@ type ServiceConf struct {
 	ConfigDir  string `yaml:"-"`
 }
 
+//监控配置
 type PrometheusConf struct {
 	SwitchOn bool `yaml:"switch_on"`
 	Port     int  `yaml:"port"`
 }
 
+//注册配置
 type RegisterConf struct {
 	SwitchOn     bool          `yaml:"switch_on"`
 	RegisterPath string        `yaml:"register_path"`
@@ -46,6 +49,7 @@ type RegisterConf struct {
 	RegisterAddr string        `yaml:"register_addr"`
 }
 
+//日志配置
 type LogConf struct {
 	Level      string `yaml:"level"`
 	Dir        string `yaml:"path"`
@@ -53,6 +57,7 @@ type LogConf struct {
 	ConsoleLog bool   `yaml:"console_log"`
 }
 
+// 限流配置
 type LimitConf struct {
 	SwitchOn bool     `yaml:"switch_on"`
 	QPSLimit float64  `yaml:"qps"`
@@ -60,6 +65,7 @@ type LimitConf struct {
 
 }
 
+// 追踪配置
 type TraceConf struct {
 	SwitchOn   bool    `yaml:"switch_on"`
 	ReportAddr string  `yaml:"report_addr"`
@@ -68,8 +74,8 @@ type TraceConf struct {
 }
 
 func initDir() (err error) {
+	//当前起服务路径
 	exeFilePath, err := filepath.Abs(os.Args[0])
-	fmt.Println("lujing---------->:",exeFilePath)
 	if err != nil {
 		return
 	}
@@ -81,7 +87,9 @@ func initDir() (err error) {
 		err = fmt.Errorf("invalid exe path:%v", exeFilePath)
 		return
 	}
+	//当前服务根路径
 	serviceConf.RootDir = path.Join(strings.ToLower(exeFilePath[0:lastIdx]), "..")
+	//当前服务配置路径
 	serviceConf.ConfigDir = path.Join(serviceConf.RootDir, "./config/", util.GetEnv(), "/config.yaml")
 	return
 }
@@ -91,17 +99,16 @@ func InitConfig() (err error) {
 	if err != nil {
 		return
 	}
-
+	//读配置
 	data, err := ioutil.ReadFile(serviceConf.ConfigDir)
 	if err != nil {
 		return
 	}
-
+	//解析配置
 	err = yaml.Unmarshal(data, &serviceConf)
 	if err != nil {
 		return
 	}
-
 	fmt.Printf("init conf succ, conf:%#v\n", serviceConf)
 	return
 }
@@ -112,10 +119,6 @@ func GetConfigDir() string {
 
 func GetRootDir() string {
 	return serviceConf.RootDir
-}
-
-func GetServerPort() int {
-	return serviceConf.Port
 }
 
 func GetConf() *ServiceConf {

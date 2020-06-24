@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"github.com/ibinarytree/koala/demo/serialize/protobuf/person"
 	"io/ioutil"
+	"myRPC/demo/serialize/protobuf/person"
 )
 
 func main()  {

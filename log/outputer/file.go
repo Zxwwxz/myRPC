@@ -27,6 +27,7 @@ func NewFileOutputer(filename string) (OutputerInterface, error) {
 	return log, err
 }
 
+//获取文件名
 func (f *FileOutputer) getCurFilename() (curFilename, originFilename string) {
 	now := time.Now()
 	curFilename = fmt.Sprintf("%s.%04d%02d%02d", f.filename,
@@ -35,6 +36,7 @@ func (f *FileOutputer) getCurFilename() (curFilename, originFilename string) {
 	return
 }
 
+//获取access文件名
 func (f *FileOutputer) getCurAccessFilename() (curAccessFilename, originAccessFilename string) {
 	now := time.Now()
 	curAccessFilename = fmt.Sprintf("%s.access.%04d%02d%02d", f.filename,

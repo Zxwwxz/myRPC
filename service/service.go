@@ -31,11 +31,13 @@ type CommonService struct {
 }
 
 func Init()  {
+	//初始化配置
 	err := config.InitConfig()
 	if err != nil {
 		fmt.Println("InitConfig,err:",err)
 	}
 	commonService.serviceConf = config.GetConf()
+	//初始化
 	initLimit()
 	initLogger()
 	initRegister()
@@ -119,6 +121,7 @@ func initTrace() {
 	}
 }
 
+//服务中间件
 func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
 	var middles []mwBase.MiddleWare
 	serviceConf := config.GetConf()

@@ -11,6 +11,7 @@ import (
 	logBase "myRPC/log/base"
 	"myRPC/meta"
 	mwBase "myRPC/middleware/base"
+	"myRPC/trace"
 	"strings"
 )
 
@@ -60,7 +61,7 @@ func TraceServiceMiddleware() mwBase.MiddleWare {
 				ext.RPCServerOption(parentSpanContext),
 				ext.SpanKindRPCServer,
 			)
-			serverSpan.SetTag("trace_id", logBase.GetTraceId(ctx))
+			serverSpan.SetTag("trace_id", trace.GetTraceId(ctx))
 			ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 			resp, err = next(ctx, req)
 			serverSpan.Finish()
@@ -81,20 +82,20 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 				opentracing.ChildOf(parentSpanCtx),
 				ext.SpanKindRPCClient,
 				opentracing.Tag{Key: string(ext.Component), Value: "client_treca"},
-				opentracing.Tag{Key: "trace_id", Value: logBase.GetTraceId(ctx)},
+				opentracing.Tag{Key: "trace_id", Value: trace.GetTraceId(ctx)},
 			}
-
 			clientMeta := meta.GetClientMeta(ctx)
 			clientSpan := tracer.StartSpan(clientMeta.ServiceName, opts...)
 			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				md = metadata.Pairs()
 			}
+			//span注入到http头
 			if err := tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, metadataTextMap(md)); err != nil {
 				return
 			}
 			ctx = metadata.NewOutgoingContext(ctx, md)
-			ctx = metadata.AppendToOutgoingContext(ctx, "trace_id", logBase.GetTraceId(ctx))
+			ctx = metadata.AppendToOutgoingContext(ctx, "trace_id", trace.GetTraceId(ctx))
 			ctx = opentracing.ContextWithSpan(ctx, clientSpan)
 			resp, err = next(ctx, req)
 			if err != nil {
@@ -118,11 +119,12 @@ func TraceIdClientMiddleware() mwBase.MiddleWare {
 					traceId = vals[0]
 				}
 			}
+			//没有追踪id生成一个
 			if len(traceId) == 0 {
-				traceId = logBase.GenTraceId()
+				traceId = trace.GenTraceId()
 			}
 			ctx = logBase.WithFieldContext(ctx)
-			ctx = logBase.WithTraceId(ctx, traceId)
+			ctx = trace.WithTraceId(ctx, traceId)
 			resp, err = next(ctx, req)
 			return
 		}

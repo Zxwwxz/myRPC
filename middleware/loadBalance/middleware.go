@@ -2,11 +2,8 @@ package mwLoadBalance
 
 import (
 	"context"
-	"github.com/ibinarytree/koala/errno"
-	"github.com/ibinarytree/koala/loadbalance"
-	"github.com/ibinarytree/koala/logs"
-	"myRPC/client"
-	balanceBase "myRPC/loadBalance/base"
+	rpcConst "myRPC/const"
+	balanceBase "myRPC/loadBalance"
 	"myRPC/meta"
 	mwBase "myRPC/middleware/base"
 )
@@ -16,7 +13,7 @@ func LoadBalanceMiddleware(balancer balanceBase.BalanceInterface) mwBase.MiddleW
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
 			if len(clientMeta.AllNodes) == 0 {
-				err = client.NotHaveInstance
+				err = rpcConst.NotHaveInstance
 				return
 			}
 			for {
@@ -27,7 +24,7 @@ func LoadBalanceMiddleware(balancer balanceBase.BalanceInterface) mwBase.MiddleW
 				delete(clientMeta.RemainNodes,clientMeta.CurNode.NodeId)
 				resp, err = next(ctx, req)
 				if err != nil {
-					if err == client.ConnFailed {
+					if err == rpcConst.ConnFailed {
 						continue
 					}
 					return
