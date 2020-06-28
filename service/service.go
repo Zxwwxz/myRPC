@@ -56,6 +56,8 @@ func Init()(err error)  {
 	if err != nil {
 		return
 	}
+	s := grpc.NewServer()
+	commonService.Server = s
 	return
 }
 
@@ -64,9 +66,7 @@ func Run() {
 	if err != nil {
 		fmt.Println("listen err:",err)
 	}
-	s := grpc.NewServer()
-	commonService.Server = s
-	err = s.Serve(listen)
+	err = commonService.Server.Serve(listen)
 	if err != nil {
 		fmt.Println("start service err:",err)
 	}

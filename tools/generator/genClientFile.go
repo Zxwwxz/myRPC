@@ -27,7 +27,7 @@ func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package
 		return
 	}
 	ctx = meta.InitClientMeta(ctx,clientObj.ServiceConf.ServiceName,"{{.Name}}")
-	middlewareFunc := clientObj.BuildClientMiddleware(c.mwFuncLogin,nil,nil)
+	middlewareFunc := clientObj.BuildClientMiddleware(c.mwFunc{{.Name}},nil,nil)
 	newRsp, err := middlewareFunc(ctx, req)
 	if err != nil {
 		return nil, err

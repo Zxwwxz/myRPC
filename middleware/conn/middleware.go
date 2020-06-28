@@ -17,7 +17,7 @@ func ConnMiddleware() mwBase.MiddleWare {
 				err = rpcConst.InvalidNode
 				return
 			}
-			address := fmt.Sprintf("%s:%s", "127.0.0.1", clientMeta.CurNode.NodePort)
+			address := fmt.Sprintf("%s:%s", clientMeta.CurNode.NodeIp, clientMeta.CurNode.NodePort)
 			//创建连接
 			conn, err := grpc.Dial(address, grpc.WithInsecure())
 			if err != nil {

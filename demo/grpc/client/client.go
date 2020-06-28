@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"myRPC/demo/grpc/pbHello"
+	pbHello "myRPC/myService/hello/generate"
 )
 
 func main()  {
