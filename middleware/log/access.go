@@ -36,6 +36,7 @@ func AccessClientMiddleware() mwBase.MiddleWare {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			ctx = logBase.WithFieldContext(ctx)
 			startTime := time.Now()
+			fmt.Println("进入日志中间件：",startTime)
 			resp, err = next(ctx, req)
 			clientMeta := meta.GetClientMeta(ctx)
 			errStatus, _ := status.FromError(err)
@@ -46,7 +47,9 @@ func AccessClientMiddleware() mwBase.MiddleWare {
 			logBase.AddField(ctx, "client:caller_cluster", clientMeta.CallerCluster)
 			logBase.AddField(ctx, "client:service_cluster", clientMeta.ServiceCluster)
 			logBase.AddField(ctx, "client:env", clientMeta.Env)
-			logBase.AddField(ctx, "client:select_node", fmt.Sprintf("%s:%s,", clientMeta.CurNode.NodeIp, clientMeta.CurNode.NodePort))
+			if clientMeta.CurNode != nil {
+				logBase.AddField(ctx, "client:select_node", fmt.Sprintf("%s:%s,", clientMeta.CurNode.NodeIp, clientMeta.CurNode.NodePort))
+			}
 			logBase.AddField(ctx, "client:caller_idc", clientMeta.CallerIDC)
 			logBase.AddField(ctx, "client:service_idc", clientMeta.ServiceIDC)
 			logOutputer.Access(ctx, "client:result=%v", errStatus.Code())

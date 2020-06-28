@@ -6,7 +6,7 @@ type Service struct {
 	//服务类型
 	SvrType int             `json:"svr_type"`
 	//节点列表
-	SvrNodes map[int]*Node  `json:"svr_nodes"`
+	SvrNodes       []*Node  `json:"svr_nodes"`
 }
 
 //当前节点

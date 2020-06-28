@@ -22,8 +22,8 @@ func main()  {
 	service := &registryBase.Service{
 		SvrName:"serB",
 		SvrType:1001,
-		SvrNodes: map[int]*registryBase.Node{
-			2:node,
+		SvrNodes: []*registryBase.Node{
+			node,
 		},
 	}
 	err = tecdPlugin.Register(context.TODO(),service)

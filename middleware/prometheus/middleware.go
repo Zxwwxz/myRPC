@@ -2,6 +2,7 @@ package mwPrometheus
 
 import (
 	"context"
+	"fmt"
 	"myRPC/meta"
 	mwBase "myRPC/middleware/base"
 	"time"
@@ -36,6 +37,7 @@ func PrometheusClientMiddleware() mwBase.MiddleWare {
 			clientMeta := meta.GetClientMeta(ctx)
 			//监控调用量
 			DefaultClientMetrics.IncRequest(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod)
+			fmt.Println("进入普罗米修斯中间件：",clientMeta.ServiceName,clientMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
 			//监控错误码

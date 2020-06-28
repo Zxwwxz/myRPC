@@ -2,6 +2,7 @@ package mwLoadBalance
 
 import (
 	"context"
+	"fmt"
 	rpcConst "myRPC/const"
 	balanceBase "myRPC/loadBalance"
 	"myRPC/meta"
@@ -16,12 +17,24 @@ func LoadBalanceMiddleware(balancer balanceBase.BalanceInterface) mwBase.MiddleW
 				err = rpcConst.NotHaveInstance
 				return
 			}
+			for _,v := range clientMeta.AllNodes {
+				clientMeta.RemainNodes = append(clientMeta.RemainNodes,v)
+			}
 			for {
 				clientMeta.CurNode, err = balancer.SelectNode(ctx, clientMeta.RemainNodes)
 				if err != nil {
 					return
 				}
-				delete(clientMeta.RemainNodes,clientMeta.CurNode.NodeId)
+				index := -1
+				for i,v := range clientMeta.RemainNodes {
+					if v.NodeId == clientMeta.CurNode.NodeId {
+						index = i
+					}
+				}
+				if index != -1 {
+					clientMeta.RemainNodes = append(clientMeta.RemainNodes[:index], clientMeta.RemainNodes[index+1:]...)
+				}
+				fmt.Println("进入负载均衡中间件：",clientMeta.CurNode)
 				resp, err = next(ctx, req)
 				if err != nil {
 					if err == rpcConst.ConnFailed {

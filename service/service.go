@@ -105,6 +105,7 @@ func initRegister()(err error) {
 		return
 	}
 	localIp := util.GetLocalIP()
+	fmt.Println("localId:",localIp)
 	tecdPlugin,err := registryBase.PluginManager.InitPlugin(context.TODO(),
 		registerConf.RegisterName,
 		registryBase.SetRegisterAddrs([]string{registerConf.RegisterAddr}),
@@ -118,8 +119,8 @@ func initRegister()(err error) {
 	service := &registryBase.Service{
 		SvrName:serviceConf.ServiceName,
 		SvrType:serviceConf.ServiceId,
-		SvrNodes: map[int]*registryBase.Node{
-			serviceConf.ServiceId:node,
+		SvrNodes: []*registryBase.Node{
+			node,
 		},
 	}
 	err = tecdPlugin.Register(context.TODO(),service)

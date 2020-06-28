@@ -7,5 +7,5 @@ import (
 
 type BalanceInterface interface {
 	GetName()(name string)
-	SelectNode(ctx context.Context,nodes map[int]*registryBase.Node)(node *registryBase.Node,err error)
+	SelectNode(ctx context.Context,nodes []*registryBase.Node)(node *registryBase.Node,err error)
 }

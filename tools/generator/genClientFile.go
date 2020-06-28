@@ -26,6 +26,7 @@ func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package
 	if err != nil {
 		return
 	}
+	ctx = meta.InitClientMeta(ctx,clientObj.ServiceConf.ServiceName,"{{.Name}}")
 	middlewareFunc := clientObj.BuildClientMiddleware(c.mwFuncLogin,nil,nil)
 	newRsp, err := middlewareFunc(ctx, req)
 	if err != nil {
@@ -38,7 +39,7 @@ func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package
 func (c *{{$.ServiceName}}Client)mwFunc{{.Name}}(ctx context.Context, request interface{}) (resp interface{}, err error) {
 	clientMeta := meta.GetClientMeta(ctx)
 	conn := clientMeta.Conn
-	if conn != nil {
+	if conn == nil {
 		return nil, errors.New("conn nil")
 	}
 	req := request.(*{{$.Package.Name}}.{{.RequestType}})

@@ -86,6 +86,7 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 			}
 			clientMeta := meta.GetClientMeta(ctx)
 			clientSpan := tracer.StartSpan(clientMeta.ServiceName, opts...)
+			fmt.Println("进入追踪中间件：",clientSpan)
 			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				md = metadata.Pairs()
@@ -123,6 +124,7 @@ func TraceIdClientMiddleware() mwBase.MiddleWare {
 			if len(traceId) == 0 {
 				traceId = trace.GenTraceId()
 			}
+			fmt.Println("进入追踪id中间件：",traceId)
 			ctx = logBase.WithFieldContext(ctx)
 			ctx = trace.WithTraceId(ctx, traceId)
 			resp, err = next(ctx, req)

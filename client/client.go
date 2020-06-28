@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"myRPC/config"
 	"myRPC/limit"
 	"myRPC/loadBalance"
@@ -15,6 +16,7 @@ import (
 	mwPrometheus "myRPC/middleware/prometheus"
 	mwTrace "myRPC/middleware/trace"
 	registryBase "myRPC/registry/base"
+	_ "myRPC/registry/etcd"
 	"myRPC/trace"
 	"sync"
 	"time"
@@ -26,7 +28,7 @@ var globalRegister registryBase.RegistryPlugin
 //公共客户端调用
 type CommonClient struct {
 	//服务配置
-	serviceConf *config.ServiceConf
+	ServiceConf *config.ServiceConf
 	//服务注册
 	register registryBase.RegistryPlugin
 	//服务限流
@@ -42,11 +44,12 @@ func NewCommonClient() (*CommonClient,error) {
 	if err != nil {
 		return nil,err
 	}
-	client.serviceConf = config.GetConf()
-	ctx := context.TODO()
+
+	client.ServiceConf = config.GetConf()
 	clientOnce.Do(func() {
 		//初始全局注册
-		regiserConf := client.serviceConf.Regiser
+		ctx := context.TODO()
+		regiserConf := client.ServiceConf.Regiser
 		globalRegister, err = registryBase.PluginManager.InitPlugin(ctx,
 			regiserConf.RegisterName,
 			registryBase.SetRegisterAddrs([]string{regiserConf.RegisterAddr}),
@@ -55,14 +58,17 @@ func NewCommonClient() (*CommonClient,error) {
 			registryBase.SetHeartTimeOut(regiserConf.HeartBeat),
 		)
 		//初始全局追踪
-		traceConf := client.serviceConf.Trace
-		err = trace.Init(client.serviceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
+		traceConf := client.ServiceConf.Trace
+		err = trace.Init(client.ServiceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
 	})
+	if globalRegister == nil {
+		return client,errors.New("globalRegister nil")
+	}
 	client.register = globalRegister
 	//初始负载
 	client.balancer = loadBalance.NewRandomBalance()
 	//初始限流
-	limitConf := client.serviceConf.Limit
+	limitConf := client.ServiceConf.Limit
 	client.limiter = limit.NewTokenLimit(limitConf.QPSLimit,limitConf.AllWater)
 	return client,err
 }
@@ -77,16 +83,16 @@ func (client *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareFunc,fr
 	middles = append(middles,mwTrace.TraceIdClientMiddleware())
 	//追踪中间件
 	middles = append(middles,mwTrace.TraceClientMiddleware())
+	//服务发现中间件
+	middles = append(middles,mwDiscover.DiscoveryMiddleware(client.register))
+	//负载均衡中间件
+	middles = append(middles,mwLoadBalance.LoadBalanceMiddleware(client.balancer))
 	//监控中间件
 	middles = append(middles,mwPrometheus.PrometheusClientMiddleware())
 	//限流中间件
 	middles = append(middles,mwLimit.LimitMiddleware(client.limiter))
 	//熔断中间件
 	middles = append(middles,mwHystrix.HystrixMiddleware())
-	//服务发现中间件
-	middles = append(middles,mwDiscover.DiscoveryMiddleware(client.register))
-	//负载均衡中间件
-	middles = append(middles,mwLoadBalance.LoadBalanceMiddleware(client.balancer))
 	//连接中间件
 	middles = append(middles,wmConn.ConnMiddleware())
 	//后续中间件

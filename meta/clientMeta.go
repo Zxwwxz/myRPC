@@ -28,9 +28,9 @@ type ClientMeta struct {
 	//当前节点
 	CurNode *registryBase.Node
 	//历史选择节点
-	RemainNodes map[int]*registryBase.Node
+	RemainNodes []*registryBase.Node
 	//服务提供方的节点列表
-	AllNodes map[int]*registryBase.Node
+	AllNodes []*registryBase.Node
 	//当前请求使用的连接
 	Conn *grpc.ClientConn
 }
@@ -45,11 +45,10 @@ func GetClientMeta(ctx context.Context) *ClientMeta {
 	return meta
 }
 
-func InitClientMeta(ctx context.Context, serviceName, serviceMethod, callerName string) context.Context {
+func InitClientMeta(ctx context.Context, serviceName, serviceMethod string) context.Context {
 	meta := &ClientMeta{
 		ServiceMethod:   serviceMethod,
 		ServiceName:     serviceName,
-		CallerName:      callerName,
 	}
 	return context.WithValue(ctx, ClientMetaContextKey{}, meta)
 }

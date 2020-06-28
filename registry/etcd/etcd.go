@@ -144,9 +144,9 @@ func (e *EtcdPlugin)GetService(ctx context.Context,serviceName string)(service *
 		}
 		service.SvrName = tempService.SvrName
 		service.SvrType = tempService.SvrType
-		service.SvrNodes = make(map[int]*registryBase.Node)
+		service.SvrNodes = []*registryBase.Node{}
 		for _, node := range tempService.SvrNodes {
-			service.SvrNodes[node.NodeId] = node
+			service.SvrNodes = append(service.SvrNodes,node)
 		}
 	}
 	allServiceInfo,_ := e.allServiceValue.Load().(*AllServiceInfo)
@@ -202,7 +202,7 @@ func (e *EtcdPlugin)updateAllServiceInfo()(err error)  {
 		newService := &registryBase.Service{
 			SvrName:oldService.SvrName,
 			SvrType:oldService.SvrType,
-			SvrNodes: map[int]*registryBase.Node{},
+			SvrNodes: []*registryBase.Node{},
 		}
 		for _,v := range resp.Kvs{
 			tempService := &registryBase.Service{}
@@ -211,7 +211,7 @@ func (e *EtcdPlugin)updateAllServiceInfo()(err error)  {
 				continue
 			}
 			for _, node := range tempService.SvrNodes {
-				newService.SvrNodes[node.NodeId] = node
+				newService.SvrNodes = append(newService.SvrNodes,node)
 			}
 		}
 		allServiceInfoNew.allServiceMap[newService.SvrName]=newService
