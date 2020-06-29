@@ -62,6 +62,7 @@ func TraceServiceMiddleware() mwBase.MiddleWare {
 				ext.SpanKindRPCServer,
 			)
 			serverSpan.SetTag("trace_id", trace.GetTraceId(ctx))
+			fmt.Println("进入追踪中间件：",serverSpan)
 			ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 			resp, err = next(ctx, req)
 			serverSpan.Finish()

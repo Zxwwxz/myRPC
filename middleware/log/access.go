@@ -15,6 +15,7 @@ func AccessServiceMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			startTime := time.Now()
+			fmt.Println("进入日志中间件：",startTime)
 			resp, err = next(ctx, req)
 			serverMeta := meta.GetServerMeta(ctx)
 			errStatus, _ := status.FromError(err)

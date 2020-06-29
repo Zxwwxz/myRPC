@@ -18,6 +18,7 @@ func PrometheusServiceMiddleware() mwBase.MiddleWare {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			serverMeta := meta.GetServerMeta(ctx)
 			//监控调用量
+			fmt.Println("进入普罗米修斯中间件：",serverMeta.ServiceName,serverMeta.ServiceMethod)
 			DefaultServerMetrics.IncRequest(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
