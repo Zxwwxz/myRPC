@@ -18,61 +18,102 @@ var (
 )
 
 type ServiceConf struct {
-	ServiceType int            `yaml:"service_type"`
-	ServiceId   int            `yaml:"service_id"`
-	ServiceVer   int           `yaml:"service_ver"`
-	ServiceName string         `yaml:"service_name"`
-	Port        int            `yaml:"port"`
+	Base        BaseConf       `yaml:"base"`
 	Prometheus  PrometheusConf `yaml:"prometheus"`
-	Regiser     RegisterConf   `yaml:"register"`
+	Registry    RegistryConf   `yaml:"register"`
 	Log         LogConf        `yaml:"log"`
 	Limit       LimitConf      `yaml:"limit"`
 	Trace       TraceConf      `yaml:"trace"`
+	Balance     BalanceConf    `yaml:"trace"`
+	Hystrix     HystrixConf    `yaml:"hystrix"`
+	Other       interface{}    `yaml:"other"`
 
 	RootDir    string `yaml:"-"`
 	ConfigDir  string `yaml:"-"`
 }
 
-//监控配置
+// 基础配置
+type BaseConf struct {
+	ServiceIDC    string    `yaml:"service_idc"`
+	ServiceType   int       `yaml:"service_type"`
+	ServiceId     int       `yaml:"service_id"`
+	ServiceVer    int       `yaml:"service_ver"`
+	ServiceName   string    `yaml:"service_name"`
+	ServicePort   int       `yaml:"service_port"`
+	ServiceWidget int       `yaml:"service_widget"`
+	ServiceFuncs  []string  `yaml:"service_funcs"`
+}
+
+// 监控配置
 type PrometheusConf struct {
-	SwitchOn bool `yaml:"switch_on"`
-	Port     int  `yaml:"port"`
+	SwitchOn       bool `yaml:"switch_on"`
+	ListenPort     int  `yaml:"listen_port"`
 }
 
-//注册配置
-type RegisterConf struct {
-	SwitchOn     bool          `yaml:"switch_on"`
-	RegisterPath string        `yaml:"register_path"`
-	Timeout      int64         `yaml:"timeout"`
-	HeartBeat    int64         `yaml:"heart_beat"`
-	RegisterName string        `yaml:"register_name"`
-	RegisterAddr string        `yaml:"register_addr"`
+// 注册配置
+type RegistryConf struct {
+	Type             string        `yaml:"type"`
+	Params           interface{}  `yaml:"params"`
 }
 
-//日志配置
+// 日志配置
 type LogConf struct {
-	Level      string `yaml:"level"`
-	Dir        string `yaml:"path"`
-	ChanSize   int    `yaml:"chan_size"`
-	ConsoleLog bool   `yaml:"console_log"`
+	SwitchOn      bool          `yaml:"switch_on"`
+	Level         string        `yaml:"level"`
+	ChanSize      int           `yaml:"chan_size"`
+	Params        interface{}  `yaml:"params"`
 }
 
 // 限流配置
 type LimitConf struct {
-	SwitchOn bool     `yaml:"switch_on"`
-	QPSLimit float64  `yaml:"qps"`
-	AllWater int      `yaml:"all_water"`
-
+	SwitchOn   bool          `yaml:"switch_on"`
+	Type       string        `yaml:"type"`
+	Params     interface{}  `yaml:"params"`
 }
 
 // 追踪配置
 type TraceConf struct {
-	SwitchOn   bool    `yaml:"switch_on"`
-	ReportAddr string  `yaml:"report_addr"`
-	SampleType string  `yaml:"sample_type"`
-	SampleRate float64 `yaml:"sample_rate"`
+	SwitchOn      bool       `yaml:"switch_on"`
+	ReportAddr    string     `yaml:"report_addr"`
+	SampleType    string     `yaml:"sample_type"`
+	SampleRate    float64    `yaml:"sample_rate"`
 }
 
+// 负载配置
+type BalanceConf struct {
+	Type       string        `yaml:"type"`
+}
+
+// 熔断配置
+type HystrixConf struct {
+	SwitchOn                 bool       `yaml:"switch_on"`
+	TimeOut                  int     	`yaml:"timeout"`
+	MaxConcurrentRequests    int        `yaml:"max_concurrent_requests"`
+	SleepWindow              int        `yaml:"sleep_window"`
+	ErrorPercentThreshold    int        `yaml:"error_percent_threshold"`
+	RequestVolumeThreshold   int        `yaml:"request_volume_threshold"`
+}
+
+// 初始化配置
+func InitConfig() (err error) {
+	err = initDir()
+	if err != nil {
+		return
+	}
+	//读配置
+	data, err := ioutil.ReadFile(serviceConf.ConfigDir)
+	if err != nil {
+		return
+	}
+	//解析配置
+	err = yaml.Unmarshal(data, &serviceConf)
+	if err != nil {
+		return
+	}
+	return
+}
+
+//初始化配置路径
 func initDir() (err error) {
 	//当前起服务路径
 	exeFilePath, err := filepath.Abs(os.Args[0])
@@ -94,24 +135,6 @@ func initDir() (err error) {
 	return
 }
 
-func InitConfig() (err error) {
-	err = initDir()
-	if err != nil {
-		return
-	}
-	//读配置
-	data, err := ioutil.ReadFile(serviceConf.ConfigDir)
-	if err != nil {
-		return
-	}
-	//解析配置
-	err = yaml.Unmarshal(data, &serviceConf)
-	if err != nil {
-		return
-	}
-	return
-}
-
 func GetConfigDir() string {
 	return serviceConf.ConfigDir
 }
@@ -122,4 +145,11 @@ func GetRootDir() string {
 
 func GetConf() *ServiceConf {
 	return serviceConf
+}
+
+func GetOtherConf() map[interface{}]interface{} {
+	if serviceConf != nil {
+		return nil
+	}
+	return serviceConf.Other.(map[interface{}]interface{})
 }

@@ -2,15 +2,11 @@ package mwPrometheus
 
 import (
 	"context"
-	"fmt"
+	logBase "myRPC/log/base"
 	"myRPC/meta"
 	mwBase "myRPC/middleware/base"
+	"myRPC/prometheus"
 	"time"
-)
-
-var (
-	DefaultServerMetrics = NewServerMetrics()
-	DefaultClientMetrics = NewClientMetrics()
 )
 
 func PrometheusServiceMiddleware() mwBase.MiddleWare {
@@ -18,14 +14,15 @@ func PrometheusServiceMiddleware() mwBase.MiddleWare {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			serverMeta := meta.GetServerMeta(ctx)
 			//监控调用量
-			fmt.Println("进入普罗米修斯中间件：",serverMeta.ServiceName,serverMeta.ServiceMethod)
-			DefaultServerMetrics.IncRequest(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod)
+			logBase.Debug("PrometheusServiceMiddleware")
+			serverMetrics := prometheus.GetServerMetrics()
+			serverMetrics.IncRequest(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
 			//监控错误码
-			DefaultServerMetrics.IncErrcode(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod, err)
+			serverMetrics.IncErrcode(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod, err)
 			//耗时分布
-			DefaultServerMetrics.ObserveLatency(ctx, serverMeta.ServiceName,
+			serverMetrics.ObserveLatency(ctx, serverMeta.ServiceName,
 				serverMeta.ServiceMethod, time.Since(startTime).Nanoseconds()/1000)
 			return
 		}
@@ -36,15 +33,16 @@ func PrometheusClientMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
+			logBase.Debug("PrometheusClientMiddleware")
+			clientMetrics := prometheus.GetClientMetrics()
 			//监控调用量
-			DefaultClientMetrics.IncRequest(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod)
-			fmt.Println("进入普罗米修斯中间件：",clientMeta.ServiceName,clientMeta.ServiceMethod)
+			clientMetrics.IncRequest(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
 			//监控错误码
-			DefaultClientMetrics.IncErrcode(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod, err)
+			clientMetrics.IncErrcode(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod, err)
 			//耗时分布
-			DefaultClientMetrics.ObserveLatency(ctx, clientMeta.ServiceName,
+			clientMetrics.ObserveLatency(ctx, clientMeta.ServiceName,
 				clientMeta.ServiceMethod, time.Since(startTime).Nanoseconds()/1000)
 			return
 		}

@@ -4,36 +4,39 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
-	"github.com/uber/jaeger-client-go/transport/zipkin"
+	"io"
 )
 
-func Init(serviceName, reportAddr, sampleType string, rate float64) (err error) {
-	transport, err := zipkin.NewHTTPTransport(
-		reportAddr,
-		zipkin.HTTPBatchSize(1),
-		zipkin.HTTPLogger(jaeger.StdLogger),
-	)
-	if err != nil {
-		return err
-	}
+var (
+	tracer opentracing.Tracer
+	closer io.Closer
+)
+
+func InitTrace(serviceName, addr, sampleType string, sampleRate float64) (err error) {
 	cfg := &config.Configuration{
 		Sampler: &config.SamplerConfig{
 			Type:  sampleType,
-			Param: rate,
+			Param: sampleRate,
 		},
 		Reporter: &config.ReporterConfig{
 			LogSpans: true,
+			LocalAgentHostPort:addr,
 		},
 		ServiceName:serviceName,
 	}
-	r := jaeger.NewRemoteReporter(transport)
-	tracer, _, err := cfg.NewTracer(
-		config.Logger(jaeger.StdLogger),
-		config.Reporter(r))
+	tracer, closer, err = cfg.NewTracer(config.Logger(jaeger.StdLogger))
 	if err != nil {
 		return err
 	}
 	opentracing.SetGlobalTracer(tracer)
 	return nil
+}
+
+func GetTracer()(opentracing.Tracer)  {
+	return tracer
+}
+
+func Close()(error)  {
+	return closer.Close()
 }
 

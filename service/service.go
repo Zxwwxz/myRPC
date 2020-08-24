@@ -3,36 +3,40 @@ package service
 import (
 	"context"
 	"fmt"
-	mwTrace "myRPC/middleware/trace"
-	"myRPC/trace"
 	"google.golang.org/grpc"
+	"myRPC/hystrix"
+	balanceBase "myRPC/loadBalance/base"
+	logBase "myRPC/log/base"
+	limitBase "myRPC/limit/base"
+	registryBase "myRPC/registry/base"
+	"myRPC/prometheus"
 	"myRPC/config"
-	"myRPC/limit"
-	logOutputer "myRPC/log/outputer"
+	"myRPC/limit/limiter"
+	"myRPC/registry/register"
+	"myRPC/trace"
+	mwTrace "myRPC/middleware/trace"
 	mwBase "myRPC/middleware/base"
 	mwLimit "myRPC/middleware/limit"
 	mwLog "myRPC/middleware/log"
 	mwPrometheus "myRPC/middleware/prometheus"
-	registryBase "myRPC/registry/base"
+	"myRPC/meta"
 	"myRPC/util"
 	"net"
-	"os"
-	"strconv"
-	"time"
-	_ "myRPC/registry/etcd"
 )
 
-var commonService = &CommonService{
-	Server: grpc.NewServer(),
-}
+var commonService *CommonService
 
 type CommonService struct {
 	*grpc.Server
 	serviceConf *config.ServiceConf
-	Limiter     limit.LimitInterface
+	limiter     limiter.LimitInterface
 }
 
-func Init()(err error)  {
+func InitService()(err error) {
+	//创建公共服务对象
+	commonService = &CommonService{
+		Server:grpc.NewServer(),
+	}
 	//初始化配置
 	err = config.InitConfig()
 	if err != nil {
@@ -44,11 +48,11 @@ func Init()(err error)  {
 	if err != nil {
 		return
 	}
-	err = initLogger()
+	err = initLog()
 	if err != nil {
 		return
 	}
-	err = initRegister()
+	err = initRegistry()
 	if err != nil {
 		return
 	}
@@ -56,13 +60,35 @@ func Init()(err error)  {
 	if err != nil {
 		return
 	}
-	s := grpc.NewServer()
-	commonService.Server = s
+	err = initPrometheus()
+	if err != nil {
+		return
+	}
+	err = initBalance()
+	if err != nil {
+		return
+	}
+	err = initHystrix()
+	if err != nil {
+		return
+	}
 	return
 }
 
+func InitServiceFunc(reqCtx context.Context,serviceMethod string)(ctx context.Context,err error) {
+	serverMeta := &meta.ServerMeta{
+		Env:util.GetEnv(),
+		IDC:commonService.serviceConf.Base.ServiceIDC,
+		ServeiceIP:util.GetLocalIP(),
+		ServiceName:commonService.serviceConf.Base.ServiceName,
+		ServiceMethod:serviceMethod,
+	}
+	ctx = meta.SetServerMeta(reqCtx,serverMeta)
+	return ctx,nil
+}
+
 func Run() {
-	listen, err := net.Listen("tcp", fmt.Sprintf(":%d", commonService.serviceConf.Port))
+	listen, err := net.Listen("tcp", fmt.Sprintf(":%d", commonService.serviceConf.Base.ServicePort))
 	if err != nil {
 		fmt.Println("listen err:",err)
 	}
@@ -76,71 +102,87 @@ func GetGrpcService() *grpc.Server {
 }
 
 func initLimit()(err error) {
-	limiter := limit.NewTokenLimit(commonService.serviceConf.Limit.QPSLimit,commonService.serviceConf.Limit.AllWater)
-	commonService.Limiter = limiter
+	if commonService.serviceConf.Limit.SwitchOn == false{
+		return nil
+	}
+	limitBase.InitLimit()
+	tempLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonService.serviceConf.Limit.Type,
+		commonService.serviceConf.Limit.Params.(map[interface{}]interface{}))
+	commonService.limiter = tempLimiter
+	return err
+}
+
+func initLog()(err error) {
+	if commonService.serviceConf.Log.SwitchOn == false{
+		return nil
+	}
+	logBase.InitLogger(commonService.serviceConf.Log.Level,
+		commonService.serviceConf.Log.ChanSize,
+		commonService.serviceConf.Log.Params.(map[interface{}]interface{}))
 	return
 }
 
-func initLogger()(err error) {
-	if !util.IsFileExist(commonService.serviceConf.Log.Dir) {
-		err := os.Mkdir(commonService.serviceConf.Log.Dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-	filename := fmt.Sprintf("%s/%s.log", commonService.serviceConf.Log.Dir, commonService.serviceConf.ServiceName)
-	outputer, err := logOutputer.NewFileOutputer(filename)
+func initRegistry()(err error) {
+	registryBase.InitRegistry()
+	_,err = registryBase.GetRegistryManager().NewRegister(commonService.serviceConf.Registry.Type,
+		commonService.serviceConf.Registry.Params.(map[interface{}]interface{}))
 	if err != nil {
-		return
+		return err
 	}
-	logOutputer.InitLogger(commonService.serviceConf.Log.Level, commonService.serviceConf.Log.ChanSize, commonService.serviceConf.ServiceName)
-	logOutputer.AddOutputer(outputer)
-	return
-}
-
-func initRegister()(err error) {
-	serviceConf := commonService.serviceConf
-	registerConf := serviceConf.Regiser
-	if !registerConf.SwitchOn {
-		return
-	}
-	localIp := util.GetLocalIP()
-	fmt.Println("localId:",localIp)
-	tecdPlugin,err := registryBase.PluginManager.InitPlugin(context.TODO(),
-		registerConf.RegisterName,
-		registryBase.SetRegisterAddrs([]string{registerConf.RegisterAddr}),
-		registryBase.SetRegisterPath(registerConf.RegisterPath),
-		registryBase.SetRegisterTimeOut(time.Duration(registerConf.Timeout)*time.Second),
-		registryBase.SetHeartTimeOut(registerConf.HeartBeat))
-	if err != nil {
-		return
-	}
-	node := &registryBase.Node{NodeId:serviceConf.ServiceId,NodeIp:localIp,NodePort:strconv.Itoa(serviceConf.Port),NodeVersion:serviceConf.ServiceVer,NodeWeight:1,NodeFuncs:[]string{}}
-	service := &registryBase.Service{
-		SvrName:serviceConf.ServiceName,
-		SvrType:serviceConf.ServiceId,
-		SvrNodes: []*registryBase.Node{
-			node,
+	registerServer := &register.Service{
+		SvrName:commonService.serviceConf.Base.ServiceName,
+		SvrType:commonService.serviceConf.Base.ServiceType,
+		SvrNodes:[]*register.Node{
+			&register.Node{
+				NodeIDC:commonService.serviceConf.Base.ServiceName,
+				NodeId:commonService.serviceConf.Base.ServiceId,
+				NodeVersion:commonService.serviceConf.Base.ServiceVer,
+				NodeIp:util.GetLocalIP(),
+				NodePort:fmt.Sprintf("%d",commonService.serviceConf.Base.ServicePort),
+				NodeWeight:commonService.serviceConf.Base.ServiceWidget,
+				NodeFuncs:commonService.serviceConf.Base.ServiceFuncs,
+			},
 		},
 	}
-	err = tecdPlugin.Register(context.TODO(),service)
-	if err != nil {
-		return
-	}
-	return
+	err = registryBase.GetRegistryManager().RegisterServer(registerServer)
+	return err
 }
 
 func initTrace()(err error) {
-	serviceConf := commonService.serviceConf
-	traceConf := serviceConf.Trace
-	if !traceConf.SwitchOn {
-		return
+	if commonService.serviceConf.Trace.SwitchOn == false{
+		return nil
 	}
-	err = trace.Init(serviceConf.ServiceName,traceConf.ReportAddr,traceConf.SampleType,traceConf.SampleRate)
+	err = trace.InitTrace(commonService.serviceConf.Base.ServiceName,
+		commonService.serviceConf.Trace.ReportAddr,
+		commonService.serviceConf.Trace.SampleType,
+		commonService.serviceConf.Trace.SampleRate)
 	if err != nil {
-		return
+		return err
 	}
 	return
+}
+
+func initPrometheus()(err error) {
+	if commonService.serviceConf.Prometheus.SwitchOn {
+		return prometheus.InitPrometheus(commonService.serviceConf.Prometheus.ListenPort)
+	}
+	return nil
+}
+
+func initBalance()(error) {
+	balanceBase.InitBalance()
+	return nil
+}
+
+func initHystrix()(error)  {
+	err := hystrix.InitHystrix(commonService.serviceConf.Base.ServiceName,
+		commonService.serviceConf.Hystrix.TimeOut,
+		commonService.serviceConf.Hystrix.MaxConcurrentRequests,
+		commonService.serviceConf.Hystrix.RequestVolumeThreshold,
+		commonService.serviceConf.Hystrix.SleepWindow,
+		commonService.serviceConf.Hystrix.ErrorPercentThreshold,
+		)
+	return err
 }
 
 //服务中间件
@@ -148,12 +190,12 @@ func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles
 	var middles []mwBase.MiddleWare
 	serviceConf := config.GetConf()
 	middles = append(middles,frontMiddles...)
-	middles = append(middles, mwLog.AccessServiceMiddleware())
+	middles = append(middles, mwLog.LogServiceMiddleware())
 	if serviceConf.Prometheus.SwitchOn {
 		middles = append(middles, mwPrometheus.PrometheusServiceMiddleware())
 	}
 	if serviceConf.Limit.SwitchOn {
-		middles = append(middles, mwLimit.LimitMiddleware(commonService.Limiter))
+		middles = append(middles, mwLimit.LimitMiddleware(commonService.limiter))
 	}
 	if serviceConf.Trace.SwitchOn {
 		middles = append(middles, mwTrace.TraceServiceMiddleware())

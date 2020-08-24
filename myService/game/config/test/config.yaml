@@ -1,0 +1,50 @@
+
+base:
+  service_type: 1001
+  service_id: 1
+  service_ver: 1
+  service_name: game
+  service_port: 8888
+  service_widget: 10
+  service_func:
+    - aaa,
+    - bbb,
+prometheus:
+  switch_on: true
+  listen_port: 9091
+registry:
+  type: etcd
+  params:
+    addr: 47.92.212.70:2379
+    path: /myRpc
+    timeout: 1
+    report_time: 10
+    update_time: 10
+log:
+  switch_on: true
+  level: debug
+  chan_size: 10000
+  params:
+    path: ./logs/
+    max_size: 1000000
+limit:
+  switch_on: true
+  type: token
+  params:
+    qps: 50000
+    all_water: 100
+trace:
+  switch_on: true
+  addr: http://47.92.212.70:6831
+  sample_type: const
+  sample_rate: 1
+balance:
+  type: random
+hystrix:
+  switch_on: true
+  timeout: 2000
+  max_concurrent_requests: 100
+  sleep_window: 1
+  error_percent_threshold: 30
+  request_volume_threshold: 10
+other:
