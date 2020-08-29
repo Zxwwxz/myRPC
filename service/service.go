@@ -102,13 +102,24 @@ func GetGrpcService() *grpc.Server {
 }
 
 func initLimit()(err error) {
-	if commonService.serviceConf.Limit.SwitchOn == false{
-		return nil
-	}
 	limitBase.InitLimit()
-	tempLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonService.serviceConf.Limit.Type,
-		commonService.serviceConf.Limit.Params.(map[interface{}]interface{}))
-	commonService.limiter = tempLimiter
+	if commonService.serviceConf.ServerLimit.SwitchOn == true{
+		serverLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonService.serviceConf.ServerLimit.Type,
+			commonService.serviceConf.ServerLimit.Params.(map[interface{}]interface{}))
+		limitBase.GetLimitMgr().SetServerLimiter(serverLimiter)
+		commonService.limiter = serverLimiter
+		if err != nil {
+			return err
+		}
+	}
+	if commonService.serviceConf.ClientLimit.SwitchOn == true{
+		clientLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonService.serviceConf.ClientLimit.Type,
+			commonService.serviceConf.ClientLimit.Params.(map[interface{}]interface{}))
+		limitBase.GetLimitMgr().SetClientLimiter(clientLimiter)
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 
@@ -171,7 +182,8 @@ func initPrometheus()(err error) {
 
 func initBalance()(error) {
 	balanceBase.InitBalance()
-	return nil
+	_,err := balanceBase.GetBalanceMgr().NewBalancer(commonService.serviceConf.Balance.Type)
+	return err
 }
 
 func initHystrix()(error)  {
@@ -194,7 +206,7 @@ func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles
 	if serviceConf.Prometheus.SwitchOn {
 		middles = append(middles, mwPrometheus.PrometheusServiceMiddleware())
 	}
-	if serviceConf.Limit.SwitchOn {
+	if serviceConf.ServerLimit.SwitchOn && commonService.limiter != nil{
 		middles = append(middles, mwLimit.LimitMiddleware(commonService.limiter))
 	}
 	if serviceConf.Trace.SwitchOn {

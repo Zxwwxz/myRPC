@@ -28,7 +28,7 @@ func NewFileOutputer(params map[interface{}]interface{},originFileName string) (
 	if path == "" {
 		path = default_path
 	}
-	maxSize := params["max_size"].(int64)
+	maxSize := params["max_size"].(int)
 	if maxSize == 0 {
 		maxSize = default_max_size
 	}
@@ -37,7 +37,7 @@ func NewFileOutputer(params map[interface{}]interface{},originFileName string) (
 		return nil, err
 	}
 	log := &FileOutputer{
-		maxSize:maxSize,
+		maxSize:int64(maxSize),
 		path:absPath,
 		originFileName: originFileName,
 		createTime:"",

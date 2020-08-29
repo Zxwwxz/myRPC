@@ -1,16 +1,16 @@
 
 base:
-  service_type: 1001
-  service_id: 1
+  service_idc: testidc
+  service_type: 1002
+  service_id: 2
   service_ver: 1
   service_name: game
-  service_port: 8888
+  service_port: 8890
   service_widget: 10
-  service_func:
-    - aaa,
-    - bbb,
+  service_funcs:    
+    - StartGame
 prometheus:
-  switch_on: true
+  switch_on: false
   listen_port: 9091
 registry:
   type: etcd
@@ -21,27 +21,33 @@ registry:
     report_time: 10
     update_time: 10
 log:
-  switch_on: true
+  switch_on: false
   level: debug
   chan_size: 10000
   params:
     path: ./logs/
-    max_size: 1000000
-limit:
-  switch_on: true
+    max_size: 5000000
+client_limit:
+  switch_on: false
   type: token
   params:
     qps: 50000
-    all_water: 100
+    all_water: 10000
+server_limit:
+  switch_on: false
+  type: token
+  params:
+    qps: 50000
+    all_water: 10000
 trace:
-  switch_on: true
+  switch_on: false
   addr: http://47.92.212.70:6831
   sample_type: const
   sample_rate: 1
 balance:
   type: random
 hystrix:
-  switch_on: true
+  switch_on: false
   timeout: 2000
   max_concurrent_requests: 100
   sleep_window: 1

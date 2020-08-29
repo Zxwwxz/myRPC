@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"myRPC/limit"
+	"myRPC/limit/base"
 	"time"
 )
 
 func main() {
-	limiter := limit.NewCounterLimit(time.Second, 100)
+	limitBase.InitLimit()
+	limiter,_ := limitBase.GetLimitMgr().NewLimiter("counter", map[interface{}]interface{}{})
 	m := make(map[int]bool)
 	for i := 0; i < 1000; i++ {
 		allow := limiter.Allow()

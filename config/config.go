@@ -20,11 +20,12 @@ var (
 type ServiceConf struct {
 	Base        BaseConf       `yaml:"base"`
 	Prometheus  PrometheusConf `yaml:"prometheus"`
-	Registry    RegistryConf   `yaml:"register"`
+	Registry    RegistryConf   `yaml:"registry"`
 	Log         LogConf        `yaml:"log"`
-	Limit       LimitConf      `yaml:"limit"`
+	ClientLimit LimitConf      `yaml:"client_limit"`
+	ServerLimit LimitConf      `yaml:"server_limit"`
 	Trace       TraceConf      `yaml:"trace"`
-	Balance     BalanceConf    `yaml:"trace"`
+	Balance     BalanceConf    `yaml:"balance"`
 	Hystrix     HystrixConf    `yaml:"hystrix"`
 	Other       interface{}    `yaml:"other"`
 

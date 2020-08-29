@@ -37,8 +37,9 @@ func (r *RegistryManager)NewRegister(registryType string,params map[interface{}]
 	}
 	if newRegister != nil {
 		r.curRegister = newRegister
+		return newRegister,nil
 	}
-	return nil,errors.New("limiterType illegal")
+	return nil,errors.New("registryType illegal")
 }
 
 func (r *RegistryManager)RegisterServer(server *register.Service)(err error){

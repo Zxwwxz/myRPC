@@ -3,17 +3,18 @@ package balancer
 import (
 	"context"
 	"errors"
+	"myRPC/registry/register"
 )
 
 type RoundBalance struct {
 	Name string
-	IndexMap map[int]int
+	IndexMap map[string]int
 }
 
 func NewRoundBalance() BalanceInterface {
 	return &RoundBalance{
 		Name:"round",
-		IndexMap:make(map[int]int),
+		IndexMap:make(map[string]int),
 	}
 }
 
@@ -21,22 +22,22 @@ func (r *RoundBalance)GetName()(name string) {
 	return r.Name
 }
 
-func (r *RoundBalance)SelectNode(ctx context.Context,nodes []*Node,params interface{})(node *Node,err error) {
+func (r *RoundBalance)SelectNode(ctx context.Context,nodes []*register.Node,params interface{})(node *register.Node,err error) {
 	nodeCount := len(nodes)
 	if nodeCount == 0 {
 		return nil,errors.New("nodes nil")
 	}
-	svrType,ok := params.(int)
+	svrName,ok := params.(string)
 	if ok == false {
 		return nil,errors.New("params nil")
 	}
-	index,ok := r.IndexMap[svrType]
+	index,ok := r.IndexMap[svrName]
 	if ok == false{
-		r.IndexMap[svrType] = 0
+		r.IndexMap[svrName] = 0
 		index = 0
 	}
 	index = (index + 1)%nodeCount
-	r.IndexMap[svrType] = index
+	r.IndexMap[svrName] = index
 	return nodes[index],nil
 }
 

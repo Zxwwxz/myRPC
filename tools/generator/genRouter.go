@@ -1,7 +1,9 @@
 package generator
 
 import (
+	"github.com/ibinarytree/proto"
 	toolsBase "myRPC/tools/base"
+	"myRPC/util"
 	"os"
 	"path"
 	"text/template"
@@ -29,6 +31,29 @@ func(g *generatorRouter)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 	err = t.Execute(file, meta)
 	if err != nil {
 		return err
+	}
+	for _,rpc := range meta.Rpc {
+		newMeta := *meta
+		newMeta.Rpc = []*proto.RPC{rpc}
+		filename := path.Join(opt.OutputPath, "router/"+rpc.Name+".go" )
+		if util.IsFileExist(filename) {
+			continue
+		}
+		file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			continue
+		}
+		defer file.Close()
+
+		t := template.New("Router"+rpc.Name)
+		t, err = t.Parse(routerTemplateFuncFile)
+		if err != nil {
+			continue
+		}
+		err = t.Execute(file, newMeta)
+		if err != nil {
+			continue
+		}
 	}
 	return nil
 }

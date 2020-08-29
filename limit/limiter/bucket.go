@@ -2,13 +2,13 @@ package limiter
 
 import (
 	"math"
+	"sync"
 	"time"
 )
 
 const (
 	default_bucket_rate = 10
-	default_bucket_cur_water = 10
-	default_bucket_all_water = 10
+	default_bucket_all_water = 100
 )
 
 type BucketLimit struct {
@@ -16,26 +16,24 @@ type BucketLimit struct {
 	curWater   float64 //当前桶里面的水
 	allWater   float64 //漏桶最多能装的水大小
 	unixNano   int64   //unix时间戳
+	lock       sync.RWMutex
 }
 
 func NewBucketLimit(params map[interface{}]interface{}) *BucketLimit {
+
+	rate := params["rate"].(int)
+	if rate == 0 {
+		rate = default_bucket_rate
+	}
+	allWater := params["all_water"].(int)
+	if rate == 0 {
+		allWater = default_bucket_all_water
+	}
 	bucketLimit := &BucketLimit{
-		rate:   	default_bucket_rate,
-		curWater:   default_bucket_cur_water,
-		allWater:   default_bucket_all_water,
+		rate:   	float64(rate),
+		curWater:   0,
+		allWater:   float64(allWater),
 		unixNano:   0,
-	}
-	rate := params["rate"].(float64)
-	if rate != 0 {
-		bucketLimit.rate = rate
-	}
-	curWater := params["cur_water"].(float64)
-	if rate != 0 {
-		bucketLimit.curWater = curWater
-	}
-	allWater := params["all_water"].(float64)
-	if rate != 0 {
-		bucketLimit.allWater = allWater
 	}
 	return bucketLimit
 }
@@ -49,6 +47,8 @@ func (b *BucketLimit) reflesh() {
 }
 
 func (b *BucketLimit) Allow() bool {
+	b.lock.Lock()
+	defer b.lock.Unlock()
 	b.reflesh()
 	if b.curWater < b.allWater {
 		b.curWater = b.curWater + 1

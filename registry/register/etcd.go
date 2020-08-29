@@ -69,6 +69,7 @@ type RegisterService struct {
 }
 
 func NewEtcdRegister(params map[interface{}]interface{})(*EtcdRegister,error) {
+	fmt.Println("params:",params)
 	addr := params["addr"].(string)
 	if addr == ""{
 		addr = default_addr
@@ -77,7 +78,7 @@ func NewEtcdRegister(params map[interface{}]interface{})(*EtcdRegister,error) {
 	if path == ""{
 		path = default_path
 	}
-	timeout := params["timeout"].(int64)
+	timeout := params["timeout"].(int)
 	if timeout == 0{
 		timeout = default_timeout
 	}
@@ -102,7 +103,7 @@ func NewEtcdRegister(params map[interface{}]interface{})(*EtcdRegister,error) {
 	etcdRegister := &EtcdRegister{
 		addr:addr,
 		path:path,
-		timeout:timeout,
+		timeout:int64(timeout),
 		reportTime:reportTime,
 		updateTime:updateTime,
 		client:etcdClient,

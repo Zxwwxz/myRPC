@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"myRPC/limit"
+	"myRPC/limit/base"
 	"time"
 )
 
 func main() {
-	limiter := limit.NewBucketLimit(10, 100)
+	limitBase.InitLimit()
+	limiter,_ := limitBase.GetLimitMgr().NewLimiter("bucket", map[interface{}]interface{}{})
 	m := make(map[int]bool)
 	for i := 0; i < 1000; i++ {
 		allow := limiter.Allow()

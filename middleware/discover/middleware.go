@@ -2,13 +2,13 @@ package mwDiscover
 
 import (
 	"context"
-	"fmt"
+	"myRPC/log/base"
 	"myRPC/meta"
-	mwBase "myRPC/middleware/base"
-	registryBase "myRPC/registry/base"
+	"myRPC/middleware/base"
+	"myRPC/registry/register"
 )
 
-func DiscoveryMiddleware(discovery registryBase.RegistryPlugin) mwBase.MiddleWare {
+func DiscoveryMiddleware(discovery register.RegisterInterface) mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
@@ -17,10 +17,30 @@ func DiscoveryMiddleware(discovery registryBase.RegistryPlugin) mwBase.MiddleWar
 			if err != nil {
 				return
 			}
-			clientMeta.AllNodes = service.SvrNodes
-			fmt.Println("进入服务发现中间件：",clientMeta.AllNodes)
+			logBase.Debug("DiscoveryMiddleware,service=%v",service)
+			allNode := getAllNodes(clientMeta,service)
+			logBase.Debug("DiscoveryMiddleware,allNode=%v",allNode)
+			clientMeta.AllNodes = allNode
 			resp, err = next(ctx, req)
 			return
 		}
 	}
+}
+
+func getAllNodes(clientMeta *meta.ClientMeta,service *register.Service) (nodes []*register.Node){
+	allNode := service.SvrNodes
+	switch clientMeta.CallerType{
+	case meta.Caller_type_balance:
+		return allNode
+	case meta.Caller_type_one:
+		svrId := clientMeta.CallerServerId
+		for _,v := range allNode{
+			if v.NodeId == svrId {
+				return []*register.Node{v}
+			}
+		}
+	case meta.Caller_type_all:
+		return allNode
+	}
+	return allNode
 }

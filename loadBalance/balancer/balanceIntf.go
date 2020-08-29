@@ -2,9 +2,10 @@ package balancer
 
 import (
 	"context"
+	"myRPC/registry/register"
 )
 
 type BalanceInterface interface {
 	GetName()(name string)
-	SelectNode(ctx context.Context,nodes []*Node,params interface{})(node *Node,err error)
+	SelectNode(ctx context.Context,nodes []*register.Node,params interface{})(node *register.Node,err error)
 }

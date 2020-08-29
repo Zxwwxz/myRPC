@@ -16,20 +16,22 @@ type TokenLimit struct {
 }
 
 func NewTokenLimit(params map[interface{}]interface{}) *TokenLimit {
-	tokenLimiter := &TokenLimit{
-		qps:		default_token_qps,
-		allWater:	default_token_all_water,
-	}
-	qps := params["qps"].(float64)
-	if qps != 0 {
-		tokenLimiter.qps = qps
+
+	qps := params["qps"].(int)
+	if qps == 0 {
+		qps = default_token_qps
 	}
 	allWater := params["all_water"].(int)
-	if allWater != 0 {
-		tokenLimiter.allWater = allWater
+	if allWater == 0 {
+		allWater = default_token_all_water
 	}
-	limiter := rate.NewLimiter(rate.Limit(tokenLimiter.qps), tokenLimiter.allWater)
-	tokenLimiter.limiter = limiter
+	limiter := rate.NewLimiter(rate.Limit(qps), allWater)
+	tokenLimiter := &TokenLimit{
+		qps:		float64(qps),
+		allWater:	allWater,
+		limiter:limiter,
+	}
+	return tokenLimiter
 }
 
 func (c *TokenLimit) Allow() bool {

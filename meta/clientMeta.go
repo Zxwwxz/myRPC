@@ -8,12 +8,14 @@ import (
 
 const (
 	//不指定哪个节点，由均衡算法算出
-	caller_type_not = 1
-	//指定服务类型，调用所有节点
-	caller_type_type = 2
-	//指定服务类型和服务id，调用指定节点
-	caller_type_type_id = 3
+	Caller_type_balance = 1
+	//指定服务名称和服务id，调用指定节点
+	Caller_type_one = 2
+	//指定服务名称，调用所有节点
+	Caller_type_all = 3
 )
+
+type ClientMetaOption func(*ClientMeta)
 
 type ClientMeta struct {
 	//服务提供方
@@ -23,18 +25,39 @@ type ClientMeta struct {
 
 	//调用类型
 	CallerType int
+	//当调用类型是3时，指定的服务id
+	CallerServerId int
+	//调用失败最大重连次数
+	MaxReconnectNum int
+	//负载均衡关键字
+	BalanceKey string
+
 	//当前节点
 	CurNode *register.Node
 	//历史选择节点
 	RemainNodes []*register.Node
 	//服务提供方的节点列表
 	AllNodes []*register.Node
-	//调用失败最大重连次数
-	MaxReconnectNum int
-	//负载均衡关键字
-	BalanceKey string
 	//当前请求使用的连接
 	Conn *grpc.ClientConn
+}
+
+func SetCallerType(callerType int) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.CallerType = callerType
+	}
+}
+
+func SetCallerServerId(callerServerId int) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.CallerServerId = callerServerId
+	}
+}
+
+func SetMaxReconnectNum(maxReconnectNum int) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.MaxReconnectNum = maxReconnectNum
+	}
 }
 
 type ClientMetaContextKey struct{}

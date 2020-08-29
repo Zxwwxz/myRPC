@@ -2,31 +2,31 @@ package generator
 var clientTemplateFile = `
 package {{.ServiceName}}Client
 
+type {{.ServiceName}}Client struct {
+}
+
+func NewClientCall() *{{.ServiceName}}Client {
+	return &{{.ServiceName}}Client{}
+}
+`
+
+var clientTemplateFuncFile = `
+package {{.ServiceName}}Client
+
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc"
 	"myRPC/client"
 	"myRPC/meta"
 	{{.Package.Name}} "{{.ImportPreFix}}/generate"
 )
 
-type {{.ServiceName}}Client struct {
-}
-
-var ClientCall = &{{.ServiceName}}Client{}
-
-func NewClientCall() *{{.ServiceName}}Client {
-	return &{{.ServiceName}}Client{}
-}
-
 {{range .Rpc}}
-func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}, opts ...grpc.CallOption) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
-	clientObj,err := client.NewCommonClient()
+func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}, options []meta.ClientMetaOption) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
+	ctx,clientObj,err := client.InitClient(ctx,"{{$.ServiceName}}","{{.Name}}",options)
 	if err != nil {
 		return
 	}
-	ctx = meta.InitClientMeta(ctx,clientObj.ServiceConf.ServiceName,"{{.Name}}")
 	middlewareFunc := clientObj.BuildClientMiddleware(c.mwFunc{{.Name}},nil,nil)
 	newRsp, err := middlewareFunc(ctx, req)
 	if err != nil {
@@ -43,10 +43,8 @@ func (c *{{$.ServiceName}}Client)mwFunc{{.Name}}(ctx context.Context, request in
 		return nil, errors.New("conn nil")
 	}
 	req := request.(*{{$.Package.Name}}.{{.RequestType}})
-	defer conn.Close()
 	newClient := {{$.Package.Name}}.New{{$.Service.Name}}Client(conn)
 	return newClient.{{.Name}}(ctx, req)
 }
 {{end}}
 `
-

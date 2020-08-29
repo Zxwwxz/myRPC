@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/rand"
+	"myRPC/registry/register"
 )
 
 type RandomBalance struct {
@@ -20,7 +21,7 @@ func (r *RandomBalance)GetName()(name string) {
 	return r.Name
 }
 
-func (r *RandomBalance)SelectNode(ctx context.Context,nodes []*Node,params interface{})(node *Node,err error) {
+func (r *RandomBalance)SelectNode(ctx context.Context,nodes []*register.Node,params interface{})(node *register.Node,err error) {
 	nodeCount := len(nodes)
 	if nodeCount == 0 {
 		return nil,errors.New("nodes nil")

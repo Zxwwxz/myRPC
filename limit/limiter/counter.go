@@ -1,7 +1,7 @@
 package limiter
 
 import (
-	"sync/atomic"
+	"sync"
 	"time"
 )
 
@@ -15,33 +15,37 @@ type CounterLimit struct {
 	limitNum        int64 //指定时间窗口内允许的最大请求数
 	intervalNano    int64 //指定时间窗口
 	lastNano        int64 //unix时间戳,单位为纳秒
+	lock            sync.RWMutex
 }
 
 func NewCounterLimit(params map[interface{}]interface{}) *CounterLimit {
-	counterLimit := &CounterLimit{
-		counterNum:   	0,
-		limitNum:   	default_counter_limit_num,
-		intervalNano:   default_counter_interval_nano,
-		lastNano:       0,
-	}
+
 	limitNum := params["limit_num"].(int64)
-	if limitNum != 0 {
-		counterLimit.limitNum = limitNum
+	if limitNum == 0 {
+		limitNum = default_counter_limit_num
 	}
 	intervalNano := params["interval_nano"].(int64)
-	if intervalNano != 0 {
-		counterLimit.intervalNano = intervalNano
+	if intervalNano == 0 {
+		intervalNano = default_counter_interval_nano
+	}
+	counterLimit := &CounterLimit{
+		counterNum:   	0,
+		limitNum:   	limitNum,
+		intervalNano:   intervalNano,
+		lastNano:       0,
 	}
 	return counterLimit
 }
 
 func (c *CounterLimit) Allow() bool {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	now := time.Now().UnixNano()
 	if now-c.lastNano > c.intervalNano {
-		atomic.StoreInt64(&c.counterNum, 0)
-		atomic.StoreInt64(&c.lastNano, now)
+		c.counterNum = 0
+		c.lastNano = now
 		return true
 	}
-	atomic.AddInt64(&c.counterNum, 1)
+	c.counterNum = c.counterNum + 1
 	return c.counterNum < c.limitNum
 }

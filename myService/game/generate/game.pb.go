@@ -8,8 +8,6 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -166,14 +164,6 @@ func (c *gameServiceClient) StartGame(ctx context.Context, in *StartGameRequest,
 // GameServiceServer is the server API for GameService service.
 type GameServiceServer interface {
 	StartGame(context.Context, *StartGameRequest) (*StartGameResponse, error)
-}
-
-// UnimplementedGameServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedGameServiceServer struct {
-}
-
-func (*UnimplementedGameServiceServer) StartGame(ctx context.Context, req *StartGameRequest) (*StartGameResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StartGame not implemented")
 }
 
 func RegisterGameServiceServer(s *grpc.Server, srv GameServiceServer) {

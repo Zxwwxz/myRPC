@@ -2,19 +2,20 @@
 package main
 
 import (
-	"fmt"
-	pbGame "myRPC/myService/game/generate"
+	"myRPC/log/base"
+    "myRPC/service"
+	"myRPC/myService/game/generate"
 	"myRPC/myService/game/router"
-	"myRPC/service"
+	
 )
 
 func main()  {
 	err := service.InitService()
 	if err != nil {
-		fmt.Println("init server err:",err)
+		logBase.Fatal("init server err:%v",err)
 	}
 	pbGame.RegisterGameServiceServer(service.GetGrpcService(),&router.Router{})
-	fmt.Println("init server success")	
+	logBase.Debug("init server run")
 	service.Run()
 }
 

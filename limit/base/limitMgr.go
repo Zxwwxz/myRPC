@@ -7,7 +7,10 @@ import (
 
 var limitManager *LimitManager
 
-type LimitManager struct {}
+type LimitManager struct {
+	clientLimiter limiter.LimitInterface
+	serverLimiter limiter.LimitInterface
+}
 
 //启动服务时初始化
 func InitLimit()  {
@@ -17,6 +20,22 @@ func InitLimit()  {
 //获取全局限流管理器
 func GetLimitMgr()*LimitManager {
 	return limitManager
+}
+
+func (l *LimitManager)SetClientLimiter(clientLimiter limiter.LimitInterface) {
+	l.clientLimiter = clientLimiter
+}
+
+func (l *LimitManager)GetClientLimiter()(limiter.LimitInterface) {
+	return l.clientLimiter
+}
+
+func (l *LimitManager)SetServerLimiter(serverLimiter limiter.LimitInterface) {
+	l.serverLimiter = serverLimiter
+}
+
+func (l *LimitManager)GetServerLimiter()(limiter.LimitInterface) {
+	return l.serverLimiter
 }
 
 //每次rpc调用创建一个限流器

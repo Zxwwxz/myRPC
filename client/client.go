@@ -7,6 +7,7 @@ import (
 	"myRPC/limit/limiter"
 	"myRPC/loadBalance/balancer"
 	balanceBase "myRPC/loadBalance/base"
+	"myRPC/meta"
 	mwBase "myRPC/middleware/base"
 	wmConn "myRPC/middleware/conn"
 	mwDiscover "myRPC/middleware/discover"
@@ -32,37 +33,35 @@ type CommonClient struct {
 	register  register.RegisterInterface
 }
 
-func InitClient() (*CommonClient,error) {
+func InitClient(reqCtx context.Context,serviceName,serviceMethod string,options []meta.ClientMetaOption) (context.Context,*CommonClient,error) {
 	//初始配置
 	commonClient := &CommonClient{}
 	commonClient.serviceConf = config.GetConf()
 	err := commonClient.initLimit()
 	if err != nil {
-		return nil,err
+		return nil,nil,err
 	}
 	err = commonClient.initBalance()
 	if err != nil {
-		return nil,err
+		return nil,nil,err
 	}
 	err = commonClient.initRegistry()
 	if err != nil {
-		return nil,err
+		return nil,nil,err
 	}
-	return commonClient,nil
-}
-
-func InitClientFunc(reqCtx context.Context) (ctx context.Context,err error) {
-
+	ctx,err := commonClient.initClientMeta(reqCtx,serviceName,serviceMethod,options)
+	if err != nil {
+		return nil,nil,err
+	}
+	return ctx,commonClient,nil
 }
 
 func (commonClient *CommonClient)initLimit()(error)  {
-	if commonClient.serviceConf.Limit.SwitchOn == false{
+	if commonClient.serviceConf.ServerLimit.SwitchOn == false{
 		return nil
 	}
-	tempLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonClient.serviceConf.Limit.Type,
-		commonClient.serviceConf.Limit.Params.(map[interface{}]interface{}))
-	commonClient.limiter = tempLimiter
-	return err
+	commonClient.limiter = limitBase.GetLimitMgr().GetClientLimiter()
+	return nil
 }
 
 func (commonClient *CommonClient)initRegistry()(error)  {
@@ -71,9 +70,20 @@ func (commonClient *CommonClient)initRegistry()(error)  {
 }
 
 func (commonClient *CommonClient)initBalance()(error) {
-	tempBalancer,err := balanceBase.GetBalanceMgr().NewBalancer(commonClient.serviceConf.Balance.Type)
-	commonClient.balancer = tempBalancer
-	return err
+	commonClient.balancer = balanceBase.GetCurBalancer()
+	return nil
+}
+
+func (commonClient *CommonClient)initClientMeta(reqCtx context.Context,serviceName,serviceMethod string,options []meta.ClientMetaOption)(context.Context,error) {
+	clientMeta := &meta.ClientMeta{
+		ServiceName:serviceName,
+		ServiceMethod:serviceMethod,
+	}
+	for _,option := range options{
+		option(clientMeta)
+	}
+	ctx := meta.SetClientMeta(reqCtx,clientMeta)
+	return ctx,nil
 }
 
 func (commonClient *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
@@ -84,7 +94,7 @@ func (commonClient *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareF
 		//日志中间件
 		middles = append(middles,mwLog.LogClientMiddleware())
 	}
-	if commonClient.serviceConf.Limit.SwitchOn {
+	if commonClient.serviceConf.ClientLimit.SwitchOn && commonClient.limiter != nil{
 		//限流中间件
 		middles = append(middles,mwLimit.LimitMiddleware(commonClient.limiter))
 	}
@@ -102,10 +112,14 @@ func (commonClient *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareF
 		//追踪中间件
 		middles = append(middles,mwTrace.TraceClientMiddleware())
 	}
-	//服务发现中间件
-	middles = append(middles,mwDiscover.DiscoveryMiddleware(commonClient.register))
-	//负载均衡中间件
-	middles = append(middles,mwLoadBalance.LoadBalanceMiddleware(commonClient.balancer))
+	if commonClient.register != nil {
+		//服务发现中间件
+		middles = append(middles,mwDiscover.DiscoveryMiddleware(commonClient.register))
+	}
+	if commonClient.balancer != nil {
+		//负载均衡中间件
+		middles = append(middles,mwLoadBalance.LoadBalanceMiddleware(commonClient.balancer))
+	}
 	//连接中间件
 	middles = append(middles,wmConn.ConnMiddleware())
 	//后续中间件

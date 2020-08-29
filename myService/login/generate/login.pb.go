@@ -8,8 +8,6 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -110,25 +108,117 @@ func (m *LoginResponse) GetLoginMsg() string {
 	return ""
 }
 
+type LogoutRequest struct {
+	LogoutName           string   `protobuf:"bytes,1,opt,name=logoutName,proto3" json:"logoutName,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LogoutRequest) Reset()         { *m = LogoutRequest{} }
+func (m *LogoutRequest) String() string { return proto.CompactTextString(m) }
+func (*LogoutRequest) ProtoMessage()    {}
+func (*LogoutRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67c21677aa7f4e4f, []int{2}
+}
+
+func (m *LogoutRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LogoutRequest.Unmarshal(m, b)
+}
+func (m *LogoutRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LogoutRequest.Marshal(b, m, deterministic)
+}
+func (m *LogoutRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogoutRequest.Merge(m, src)
+}
+func (m *LogoutRequest) XXX_Size() int {
+	return xxx_messageInfo_LogoutRequest.Size(m)
+}
+func (m *LogoutRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_LogoutRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LogoutRequest proto.InternalMessageInfo
+
+func (m *LogoutRequest) GetLogoutName() string {
+	if m != nil {
+		return m.LogoutName
+	}
+	return ""
+}
+
+type LogoutResponse struct {
+	LogoutCode           string   `protobuf:"bytes,1,opt,name=logoutCode,proto3" json:"logoutCode,omitempty"`
+	LogoutMsg            string   `protobuf:"bytes,2,opt,name=logoutMsg,proto3" json:"logoutMsg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LogoutResponse) Reset()         { *m = LogoutResponse{} }
+func (m *LogoutResponse) String() string { return proto.CompactTextString(m) }
+func (*LogoutResponse) ProtoMessage()    {}
+func (*LogoutResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67c21677aa7f4e4f, []int{3}
+}
+
+func (m *LogoutResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LogoutResponse.Unmarshal(m, b)
+}
+func (m *LogoutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LogoutResponse.Marshal(b, m, deterministic)
+}
+func (m *LogoutResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LogoutResponse.Merge(m, src)
+}
+func (m *LogoutResponse) XXX_Size() int {
+	return xxx_messageInfo_LogoutResponse.Size(m)
+}
+func (m *LogoutResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_LogoutResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LogoutResponse proto.InternalMessageInfo
+
+func (m *LogoutResponse) GetLogoutCode() string {
+	if m != nil {
+		return m.LogoutCode
+	}
+	return ""
+}
+
+func (m *LogoutResponse) GetLogoutMsg() string {
+	if m != nil {
+		return m.LogoutMsg
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*LoginRequest)(nil), "pbLogin.LoginRequest")
 	proto.RegisterType((*LoginResponse)(nil), "pbLogin.LoginResponse")
+	proto.RegisterType((*LogoutRequest)(nil), "pbLogin.LogoutRequest")
+	proto.RegisterType((*LogoutResponse)(nil), "pbLogin.LogoutResponse")
 }
 
 func init() { proto.RegisterFile("login.proto", fileDescriptor_67c21677aa7f4e4f) }
 
 var fileDescriptor_67c21677aa7f4e4f = []byte{
-	// 147 bytes of a gzipped FileDescriptorProto
+	// 209 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xce, 0xc9, 0x4f, 0xcf,
 	0xcc, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2f, 0x48, 0xf2, 0x01, 0x71, 0x95, 0x74,
 	0xb8, 0x78, 0xc0, 0x8c, 0xa0, 0xd4, 0xc2, 0xd2, 0xd4, 0xe2, 0x12, 0x21, 0x19, 0x2e, 0x4e, 0xb0,
 	0x3a, 0xbf, 0xc4, 0xdc, 0x54, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xce, 0x20, 0x84, 0x80, 0x92, 0x27,
 	0x17, 0x2f, 0x54, 0x75, 0x71, 0x41, 0x7e, 0x5e, 0x71, 0x2a, 0x5c, 0xb9, 0x73, 0x7e, 0x0a, 0xaa,
 	0x72, 0x90, 0x80, 0x90, 0x14, 0x17, 0x07, 0x98, 0xe3, 0x5b, 0x9c, 0x2e, 0xc1, 0x04, 0x96, 0x84,
-	0xf3, 0x8d, 0x5c, 0xb8, 0x38, 0x20, 0x46, 0x15, 0x24, 0x0b, 0x59, 0x70, 0xb1, 0x82, 0xd9, 0x42,
-	0xa2, 0x7a, 0x50, 0x77, 0xe9, 0x21, 0x3b, 0x4a, 0x4a, 0x0c, 0x5d, 0x18, 0x62, 0xbb, 0x12, 0x43,
-	0x12, 0x1b, 0xd8, 0x3b, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf8, 0xbb, 0xf1, 0xba, 0xdd,
-	0x00, 0x00, 0x00,
+	0xf3, 0x95, 0xf4, 0xc1, 0x46, 0xe5, 0x97, 0x96, 0xc0, 0x6c, 0x96, 0xe3, 0xe2, 0xca, 0x01, 0x0b,
+	0x20, 0x59, 0x8d, 0x24, 0xa2, 0xe4, 0xc7, 0xc5, 0x07, 0xd3, 0x00, 0xb5, 0x1c, 0xae, 0x03, 0xc9,
+	0x76, 0x24, 0x11, 0xa8, 0xe3, 0xf2, 0x4b, 0x4b, 0x10, 0xf6, 0x23, 0x04, 0x8c, 0x1a, 0x19, 0xb9,
+	0x38, 0x20, 0x9e, 0x29, 0x48, 0x16, 0xb2, 0xe0, 0x62, 0x05, 0xb3, 0x85, 0x44, 0xf5, 0xa0, 0x21,
+	0xa3, 0x87, 0x1c, 0x2c, 0x52, 0x62, 0xe8, 0xc2, 0x10, 0x27, 0x28, 0x31, 0x08, 0x59, 0x73, 0xb1,
+	0x41, 0x9c, 0x25, 0x84, 0xa2, 0x06, 0xe1, 0x31, 0x29, 0x71, 0x0c, 0x71, 0x98, 0xe6, 0x24, 0x36,
+	0x70, 0x6c, 0x18, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x14, 0xb0, 0x25, 0x3b, 0x9c, 0x01, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -144,6 +234,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type LoginRpcClient interface {
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 }
 
 type loginRpcClient struct {
@@ -163,17 +254,19 @@ func (c *loginRpcClient) Login(ctx context.Context, in *LoginRequest, opts ...gr
 	return out, nil
 }
 
+func (c *loginRpcClient) Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error) {
+	out := new(LogoutResponse)
+	err := c.cc.Invoke(ctx, "/pbLogin.LoginRpc/Logout", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LoginRpcServer is the server API for LoginRpc service.
 type LoginRpcServer interface {
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-}
-
-// UnimplementedLoginRpcServer can be embedded to have forward compatible implementations.
-type UnimplementedLoginRpcServer struct {
-}
-
-func (*UnimplementedLoginRpcServer) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 }
 
 func RegisterLoginRpcServer(s *grpc.Server, srv LoginRpcServer) {
@@ -198,6 +291,24 @@ func _LoginRpc_Login_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LoginRpc_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogoutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LoginRpcServer).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pbLogin.LoginRpc/Logout",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LoginRpcServer).Logout(ctx, req.(*LogoutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LoginRpc_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "pbLogin.LoginRpc",
 	HandlerType: (*LoginRpcServer)(nil),
@@ -205,6 +316,10 @@ var _LoginRpc_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _LoginRpc_Login_Handler,
+		},
+		{
+			MethodName: "Logout",
+			Handler:    _LoginRpc_Logout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

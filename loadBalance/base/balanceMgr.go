@@ -7,7 +7,9 @@ import (
 
 var balanceManager *BalanceManager
 
-type BalanceManager struct {}
+type BalanceManager struct {
+	curBalancer balancer.BalanceInterface
+}
 
 //启动服务时初始化
 func InitBalance()  {
@@ -19,15 +21,26 @@ func GetBalanceMgr()*BalanceManager {
 	return balanceManager
 }
 
+func GetCurBalancer()(balancer.BalanceInterface){
+	if balanceManager != nil {
+		return balanceManager.curBalancer
+	}
+	return nil
+}
+
 //每次rpc调用创建一个均衡器
-func (l *BalanceManager)NewBalancer(balanceType string) (balancer.BalanceInterface,error) {
+func (l *BalanceManager)NewBalancer(balanceType string) (newBalancer balancer.BalanceInterface,err error) {
 	switch balanceType {
 	case "random":
-		return balancer.NewRandomBalance(),nil
+		newBalancer = balancer.NewRandomBalance()
 	case "round":
-		return balancer.NewRoundBalance(),nil
+		newBalancer = balancer.NewRoundBalance()
 	case "weight_random":
-		return balancer.NewWeightRandomBalance(),nil
+		newBalancer = balancer.NewWeightRandomBalance()
+	}
+	if newBalancer != nil {
+		l.curBalancer = newBalancer
+		return newBalancer,nil
 	}
 	return nil,errors.New("balanceType illegal")
 }
