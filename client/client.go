@@ -3,21 +3,21 @@ package client
 import (
 	"context"
 	"myRPC/config"
-	limitBase "myRPC/limit/base"
+	"myRPC/limit/base"
 	"myRPC/limit/limiter"
 	"myRPC/loadBalance/balancer"
-	balanceBase "myRPC/loadBalance/base"
+	"myRPC/loadBalance/base"
 	"myRPC/meta"
-	mwBase "myRPC/middleware/base"
-	wmConn "myRPC/middleware/conn"
-	mwDiscover "myRPC/middleware/discover"
-	mwHystrix "myRPC/middleware/hystrix"
-	mwLimit "myRPC/middleware/limit"
-	mwLoadBalance "myRPC/middleware/loadBalance"
-	mwLog "myRPC/middleware/log"
-	mwPrometheus "myRPC/middleware/prometheus"
-	mwTrace "myRPC/middleware/trace"
-	registryBase "myRPC/registry/base"
+	"myRPC/middleware/base"
+	"myRPC/middleware/conn"
+	"myRPC/middleware/discover"
+	"myRPC/middleware/hystrix"
+	"myRPC/middleware/limit"
+	"myRPC/middleware/loadBalance"
+	"myRPC/middleware/log"
+	"myRPC/middleware/prometheus"
+	"myRPC/middleware/trace"
+	"myRPC/registry/base"
 	"myRPC/registry/register"
 )
 
@@ -57,7 +57,7 @@ func InitClient(reqCtx context.Context,serviceName,serviceMethod string,options 
 }
 
 func (commonClient *CommonClient)initLimit()(error)  {
-	if commonClient.serviceConf.ServerLimit.SwitchOn == false{
+	if commonClient.serviceConf.ClientLimit.SwitchOn == false{
 		return nil
 	}
 	commonClient.limiter = limitBase.GetLimitMgr().GetClientLimiter()
@@ -78,6 +78,8 @@ func (commonClient *CommonClient)initClientMeta(reqCtx context.Context,serviceNa
 	clientMeta := &meta.ClientMeta{
 		ServiceName:serviceName,
 		ServiceMethod:serviceMethod,
+		ClientName:commonClient.serviceConf.Base.ServiceName,
+		MaxReconnectNum: meta.Default_max_reconnect,
 	}
 	for _,option := range options{
 		option(clientMeta)
@@ -96,7 +98,7 @@ func (commonClient *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareF
 	}
 	if commonClient.serviceConf.ClientLimit.SwitchOn && commonClient.limiter != nil{
 		//限流中间件
-		middles = append(middles,mwLimit.LimitMiddleware(commonClient.limiter))
+		middles = append(middles,mwLimit.ClientLimitMiddleware(commonClient.limiter))
 	}
 	if commonClient.serviceConf.Hystrix.SwitchOn {
 		//熔断中间件

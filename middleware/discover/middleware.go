@@ -2,6 +2,7 @@ package mwDiscover
 
 import (
 	"context"
+	"myRPC/const"
 	"myRPC/log/base"
 	"myRPC/meta"
 	"myRPC/middleware/base"
@@ -15,14 +16,13 @@ func DiscoveryMiddleware(discovery register.RegisterInterface) mwBase.MiddleWare
 			//服务发现所有节点
 			service, err := discovery.GetService(ctx, clientMeta.ServiceName)
 			if err != nil {
-				return
+				return nil,rpcConst.NotFoundNode
 			}
 			logBase.Debug("DiscoveryMiddleware,service=%v",service)
 			allNode := getAllNodes(clientMeta,service)
 			logBase.Debug("DiscoveryMiddleware,allNode=%v",allNode)
 			clientMeta.AllNodes = allNode
-			resp, err = next(ctx, req)
-			return
+			return next(ctx, req)
 		}
 	}
 }
@@ -39,6 +39,7 @@ func getAllNodes(clientMeta *meta.ClientMeta,service *register.Service) (nodes [
 				return []*register.Node{v}
 			}
 		}
+		return nil
 	case meta.Caller_type_all:
 		return allNode
 	}

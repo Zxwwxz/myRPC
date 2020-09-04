@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func InitPrometheus(listenPort int)(error) {
+func InitPrometheus(listenPort int,clientHistogram,serverHistogram string)(error) {
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {
 		_ =  http.ListenAndServe(fmt.Sprint(":%d",listenPort), nil)
 	}()
-	initMetrics()
+	initMetrics(clientHistogram,serverHistogram)
 	return nil
 }

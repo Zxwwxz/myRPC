@@ -49,6 +49,8 @@ type BaseConf struct {
 type PrometheusConf struct {
 	SwitchOn       bool `yaml:"switch_on"`
 	ListenPort     int  `yaml:"listen_port"`
+	ClientHistogram string  `yaml:"client_histogram"`
+	ServerHistogram string  `yaml:"server_histogram"`
 }
 
 // 注册配置

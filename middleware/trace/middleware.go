@@ -93,7 +93,7 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 			}
 			//span注入到http头
 			if err := tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, metadataTextMap(md)); err != nil {
-				return nil, err
+				logBase.Warn("TraceClientMiddleware,tracer.Inject,err=%v",err)
 			}
 			ctx = metadata.NewOutgoingContext(ctx, md)
 			ctx = metadata.AppendToOutgoingContext(ctx, "trace_id", trace.GetTraceId(ctx))

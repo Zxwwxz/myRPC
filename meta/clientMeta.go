@@ -15,13 +15,20 @@ const (
 	Caller_type_all = 3
 )
 
+const (
+	Default_max_reconnect = 3
+)
+
 type ClientMetaOption func(*ClientMeta)
 
 type ClientMeta struct {
-	//服务提供方
+	//服务端服务名
 	ServiceName string
 	//服务方法
 	ServiceMethod string
+
+	//客户端服务名
+	ClientName string
 
 	//调用类型
 	CallerType int

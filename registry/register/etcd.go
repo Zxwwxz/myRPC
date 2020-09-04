@@ -69,7 +69,6 @@ type RegisterService struct {
 }
 
 func NewEtcdRegister(params map[interface{}]interface{})(*EtcdRegister,error) {
-	fmt.Println("params:",params)
 	addr := params["addr"].(string)
 	if addr == ""{
 		addr = default_addr
@@ -157,9 +156,10 @@ func (e *EtcdRegister)GetService(ctx context.Context,serviceName string)(service
 	//用前缀读
 	resp ,err := e.client.Get(ctx,path,clientv3.WithPrefix())
 	if err != nil{
-		fmt.Println("etcd get err:",err)
+		return nil,err
 	}
 	remoteService := &Service{}
+	remoteService.SvrNodes = []*Node{}
 	for _,v := range resp.Kvs{
 		tempService := &Service{}
 		err := json.Unmarshal(v.Value,tempService)
@@ -168,7 +168,6 @@ func (e *EtcdRegister)GetService(ctx context.Context,serviceName string)(service
 		}
 		remoteService.SvrName = tempService.SvrName
 		remoteService.SvrType = tempService.SvrType
-		remoteService.SvrNodes = []*Node{}
 		for _, node := range tempService.SvrNodes {
 			remoteService.SvrNodes = append(remoteService.SvrNodes,node)
 		}

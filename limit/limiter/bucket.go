@@ -20,7 +20,6 @@ type BucketLimit struct {
 }
 
 func NewBucketLimit(params map[interface{}]interface{}) *BucketLimit {
-
 	rate := params["rate"].(int)
 	if rate == 0 {
 		rate = default_bucket_rate

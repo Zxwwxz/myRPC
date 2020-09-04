@@ -79,7 +79,7 @@ func (l *LogMgr)addLogger(params map[interface{}]interface{}) {
 	for logType,_ := range logMgr.logType{
 		tempLogger,err := logger.NewFileOutputer(params,logType)
 		if err != nil{
-			return
+			continue
 		}
 		logMgr.loggers[logType] = tempLogger
 	}

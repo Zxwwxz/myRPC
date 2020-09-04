@@ -12,7 +12,7 @@ type Service struct {
 //当前节点
 type Node struct {
 	//机房
-	NodeIDC string       `json:"node_id"`
+	NodeIDC string       `json:"node_idc"`
 	//id
 	NodeId int           `json:"node_id"`
 	//版本

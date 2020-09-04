@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"myRPC/client"
+    "myRPC/const"
 	"myRPC/meta"
 	{{.Package.Name}} "{{.ImportPreFix}}/generate"
 )
@@ -25,15 +26,20 @@ import (
 func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}, options []meta.ClientMetaOption) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
 	ctx,clientObj,err := client.InitClient(ctx,"{{$.ServiceName}}","{{.Name}}",options)
 	if err != nil {
-		return
+		newErr := rpcConst.ClientInitFailed
+		newErr.Message = err.Error()
+		return nil,newErr
 	}
 	middlewareFunc := clientObj.BuildClientMiddleware(c.mwFunc{{.Name}},nil,nil)
 	newRsp, err := middlewareFunc(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-	rsp = newRsp.(*{{$.Package.Name}}.{{.ReturnsType}})
-	return rsp, err
+	rsp,ok := newRsp.(*{{$.Package.Name}}.{{.ReturnsType}})
+    if ok == false {
+		return nil,nil
+	}
+	return rsp, nil
 }
 
 func (c *{{$.ServiceName}}Client)mwFunc{{.Name}}(ctx context.Context, request interface{}) (resp interface{}, err error) {

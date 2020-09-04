@@ -2,10 +2,9 @@ package mwLog
 
 import (
 	"context"
-	"google.golang.org/grpc/status"
-	logBase "myRPC/log/base"
+	"myRPC/log/base"
 	"myRPC/meta"
-	mwBase "myRPC/middleware/base"
+	"myRPC/middleware/base"
 	"time"
 )
 
@@ -16,10 +15,11 @@ func LogServiceMiddleware() mwBase.MiddleWare {
 			serverMeta := meta.GetServerMeta(ctx)
 			logBase.Debug("LogServiceMiddleware->befor serverMeta:%v",serverMeta)
 			resp, err = next(ctx, req)
-			errStatus, _ := status.FromError(err)
 			cost := time.Since(startTime).Nanoseconds() / 1000
 			logBase.Debug("LogServiceMiddleware->after serverMeta:%v",serverMeta)
-			logBase.Debug("LogServiceMiddleware,code:%d",errStatus.Code())
+			if err != nil {
+				logBase.Debug("LogServiceMiddleware,errMsg:%s",err.Error())
+			}
 			logBase.Debug("LogServiceMiddleware,cost:%d",cost)
 			return
 		}
@@ -32,10 +32,11 @@ func LogClientMiddleware() mwBase.MiddleWare {
 			clientMeta := meta.GetClientMeta(ctx)
 			logBase.Debug("LogClientMiddleware->befor clientMeta:%v",clientMeta)
 			resp, err = next(ctx, req)
-			errStatus, _ := status.FromError(err)
 			cost := time.Since(startTime).Nanoseconds() / 1000
 			logBase.Debug("LogClientMiddleware->after clientMeta:%v",clientMeta)
-			logBase.Debug("LogClientMiddleware,code:%d",errStatus.Code())
+			if err != nil {
+				logBase.Debug("LogClientMiddleware,errMsg:%s",err.Error())
+			}
 			logBase.Debug("LogClientMiddleware,cost:%d",cost)
 			return
 		}

@@ -4,24 +4,24 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"math/rand"
 	"net/http"
 	"time"
 )
 
-var (
-	counter = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:"example_counter",
-	})
-)
-
-func init()  {
-	prometheus.MustRegister(counter)
-}
 
 func main()  {
+	counter := prometheus.NewCounter(prometheus.CounterOpts{
+		Name:"example_counter",
+	})
+	rand.Seed(time.Now().Unix())
+	prometheus.MustRegister(counter)
 	go func() {
-		counter.Inc()
-		time.Sleep(time.Second)
+		for{
+			val := rand.Float64()
+			counter.Add(val)
+			time.Sleep(time.Second)
+		}
 	}()
 	http.Handle("/metrics", promhttp.Handler())
 	fmt.Println(http.ListenAndServe(":9100", nil))

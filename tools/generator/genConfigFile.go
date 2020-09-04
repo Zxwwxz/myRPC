@@ -14,6 +14,8 @@ base:
 prometheus:
   switch_on: false
   listen_port: 9091
+  client_histogram: 100,100,5
+  server_histogram: 100,100,5
 registry:
   type: etcd
   params:
@@ -27,7 +29,7 @@ log:
   level: debug
   chan_size: 10000
   params:
-    path: ./logs/
+    path: ../logs/
     max_size: 5000000
 client_limit:
   switch_on: false

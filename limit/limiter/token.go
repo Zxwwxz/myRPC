@@ -16,7 +16,6 @@ type TokenLimit struct {
 }
 
 func NewTokenLimit(params map[interface{}]interface{}) *TokenLimit {
-
 	qps := params["qps"].(int)
 	if qps == 0 {
 		qps = default_token_qps

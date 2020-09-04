@@ -9,20 +9,15 @@ import (
 	"time"
 )
 
-var (
-	gauge = prometheus.NewGauge(prometheus.GaugeOpts{
+func main()  {
+	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:"example_gauge",
 	})
-)
-
-func init()  {
+	rand.Seed(time.Now().Unix())
 	prometheus.MustRegister(gauge)
-}
-
-func main()  {
 	go func() {
 		for{
-			val := rand.Float64() * 100
+			val := rand.Float64()
 			gauge.Set(val)
 			time.Sleep(time.Second)
 		}

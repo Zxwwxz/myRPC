@@ -4,20 +4,34 @@ import (
 	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"myRPC/const"
 	"myRPC/limit/limiter"
-	logBase "myRPC/log/base"
-	mwBase "myRPC/middleware/base"
+	"myRPC/log/base"
+	"myRPC/middleware/base"
 )
 
-func LimitMiddleware(limiter limiter.LimitInterface) mwBase.MiddleWare {
+func ClientLimitMiddleware(limiter limiter.LimitInterface) mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			//判断是否有限流
 			allow := limiter.Allow()
-			logBase.Debug("LimitMiddleware,alloc=%s",allow)
+			logBase.Debug("ClientLimitMiddleware,allow=%s",allow)
 			if !allow {
-				err = status.Error(codes.ResourceExhausted, "rate limited")
-				return
+				return nil,rpcConst.ClientLimit
+			}
+			return next(ctx, req)
+		}
+	}
+}
+
+func ServerLimitMiddleware(limiter limiter.LimitInterface) mwBase.MiddleWare {
+	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
+		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
+			//判断是否有限流
+			allow := limiter.Allow()
+			logBase.Debug("ServerLimitMiddleware,allow=%s",allow)
+			if !allow {
+				return nil,status.Error(codes.ResourceExhausted, "server rate limited")
 			}
 			return next(ctx, req)
 		}

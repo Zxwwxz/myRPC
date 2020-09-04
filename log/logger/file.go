@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	default_path = "./logs/"
+	default_path = "../logs/"
 	default_max_size = 50000000
 )
 
@@ -68,7 +68,7 @@ func (f *FileOutputer) init() (err error) {
 //获取文件名
 func (f *FileOutputer) getCurFilename(nameType string) (curFilename string,nowTime string) {
 	now := time.Now()
-	createTime := now.Format("2006-01-02 15:04:05")
+	createTime := fmt.Sprintf("%d-%d-%d %d-%d-%d",now.Year(),now.Month(),now.Day(),now.Hour(),now.Minute(),now.Second())
 	if nameType == "create" {
 		curFilename = fmt.Sprintf("[%s][%s].log", f.originFileName,
 			createTime)
@@ -80,7 +80,7 @@ func (f *FileOutputer) getCurFilename(nameType string) (curFilename string,nowTi
 }
 
 func (f *FileOutputer) initFile(filename string) (file *os.File, err error) {
-	file, err = os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0755)
+	file, err = os.OpenFile(fmt.Sprintf("%s\\%s",f.path,filename), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0755)
 	if err != nil {
 		err = fmt.Errorf("open file %s failed, err:%v", filename, err)
 		return
@@ -100,7 +100,7 @@ func (f *FileOutputer) checkSplitFile(curTime time.Time,file *os.File)(error) {
 			return err
 		}
 	}
-	fileInfo,err := os.Stat(fmt.Sprintf("%s%s",f.path,f.curFileName))
+	fileInfo,err := os.Stat(fmt.Sprintf("%s\\%s",f.path,f.curFileName))
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (f *FileOutputer) Write(data *LogData)(error) {
 
 func (f *FileOutputer) Close()(error) {
 	curFilename,_ := f.getCurFilename("close")
-	err := os.Rename(fmt.Sprintf("%s%s",f.path,f.curFileName),curFilename)
+	err := os.Rename(fmt.Sprintf("%s\\%s",f.path,f.curFileName),curFilename)
 	if err != nil {
 		return err
 	}

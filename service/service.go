@@ -145,7 +145,7 @@ func initRegistry()(err error) {
 		SvrType:commonService.serviceConf.Base.ServiceType,
 		SvrNodes:[]*register.Node{
 			&register.Node{
-				NodeIDC:commonService.serviceConf.Base.ServiceName,
+				NodeIDC:commonService.serviceConf.Base.ServiceIDC,
 				NodeId:commonService.serviceConf.Base.ServiceId,
 				NodeVersion:commonService.serviceConf.Base.ServiceVer,
 				NodeIp:util.GetLocalIP(),
@@ -175,7 +175,9 @@ func initTrace()(err error) {
 
 func initPrometheus()(err error) {
 	if commonService.serviceConf.Prometheus.SwitchOn {
-		return prometheus.InitPrometheus(commonService.serviceConf.Prometheus.ListenPort)
+		return prometheus.InitPrometheus(commonService.serviceConf.Prometheus.ListenPort,
+			commonService.serviceConf.Prometheus.ClientHistogram,
+			commonService.serviceConf.Prometheus.ServerHistogram)
 	}
 	return nil
 }
@@ -207,7 +209,7 @@ func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles
 		middles = append(middles, mwPrometheus.PrometheusServiceMiddleware())
 	}
 	if serviceConf.ServerLimit.SwitchOn && commonService.limiter != nil{
-		middles = append(middles, mwLimit.LimitMiddleware(commonService.limiter))
+		middles = append(middles, mwLimit.ServerLimitMiddleware(commonService.limiter))
 	}
 	if serviceConf.Trace.SwitchOn {
 		middles = append(middles, mwTrace.TraceServiceMiddleware())

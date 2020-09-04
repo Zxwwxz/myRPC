@@ -2,9 +2,11 @@ package mwPrometheus
 
 import (
 	"context"
-	logBase "myRPC/log/base"
+	"google.golang.org/grpc/status"
+	"myRPC/const"
+	"myRPC/log/base"
 	"myRPC/meta"
-	mwBase "myRPC/middleware/base"
+	"myRPC/middleware/base"
 	"myRPC/prometheus"
 	"time"
 )
@@ -19,11 +21,13 @@ func PrometheusServiceMiddleware() mwBase.MiddleWare {
 			serverMetrics.IncRequest(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
-			//监控错误码
-			serverMetrics.IncErrcode(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod, err)
+			if err != nil {
+				//监控错误码
+				serverMetrics.IncErrcode(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod,"server", int(status.Code(err)))
+			}
 			//耗时分布
 			serverMetrics.ObserveLatency(ctx, serverMeta.ServiceName,
-				serverMeta.ServiceMethod, time.Since(startTime).Nanoseconds()/1000)
+				serverMeta.ServiceMethod, time.Since(startTime).Nanoseconds()/1000000)
 			return
 		}
 	}
@@ -39,8 +43,10 @@ func PrometheusClientMiddleware() mwBase.MiddleWare {
 			clientMetrics.IncRequest(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
-			//监控错误码
-			clientMetrics.IncErrcode(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod, err)
+			if newErr,ok := err.(*rpcConst.ClientError);ok == true{
+				//监控错误码
+				clientMetrics.IncErrcode(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod, "client", newErr.Code())
+			}
 			//耗时分布
 			clientMetrics.ObserveLatency(ctx, clientMeta.ServiceName,
 				clientMeta.ServiceMethod, time.Since(startTime).Nanoseconds()/1000)

@@ -11,6 +11,8 @@ package router
 
 import (
 	"context"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
 	"{{.ImportPreFix}}/controller"
 	{{.Package.Name}} "{{.ImportPreFix}}/generate"
 	"myRPC/service"
@@ -20,12 +22,18 @@ import (
 func (s *Router){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
 	ctx,err = service.InitServiceFunc(ctx,"{{.Name}}")
 	if err != nil {
-		return rsp,err
+		return rsp,status.Error(codes.InvalidArgument, err.Error())
 	}
 	resultMwFunc := service.BuildServerMiddleware(s.MwFunc{{.Name}},nil,nil)
 	newRsp,err := resultMwFunc(ctx,req)
-	rsp = newRsp.(*{{$.Package.Name}}.{{.ReturnsType}})
-	return rsp,err
+    if err != nil {
+		return nil,status.Error(codes.Internal, err.Error())
+	}
+	rsp,ok := newRsp.(*{{$.Package.Name}}.{{.ReturnsType}})
+	if ok == false {
+		return nil,status.Error(codes.InvalidArgument, "rsp type illegal")
+	}
+	return rsp,nil
 }
 
 func (s *Router)MwFunc{{.Name}}(ctx context.Context, req interface{}) (rsp interface{}, err error) {

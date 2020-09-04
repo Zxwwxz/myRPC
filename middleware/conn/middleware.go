@@ -15,8 +15,7 @@ func ConnMiddleware() mwBase.MiddleWare {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
 			if clientMeta.CurNode == nil{
-				err = rpcConst.NotFoundNode
-				return
+				return nil,rpcConst.NotFoundNode
 			}
 			address := fmt.Sprintf("%s:%s", clientMeta.CurNode.NodeIp, clientMeta.CurNode.NodePort)
 			logBase.Debug("ConnMiddleware,address=%s",address)
@@ -27,8 +26,7 @@ func ConnMiddleware() mwBase.MiddleWare {
 			}
 			clientMeta.Conn = conn
 			defer conn.Close()
-			resp, err = next(ctx, req)
-			return
+			return next(ctx, req)
 		}
 	}
 }

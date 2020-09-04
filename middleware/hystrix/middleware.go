@@ -2,6 +2,7 @@ package mwHystrix
 
 import (
 	"context"
+	"fmt"
 	"github.com/afex/hystrix-go/hystrix"
 	"myRPC/log/base"
 	"myRPC/meta"
@@ -13,16 +14,19 @@ func HystrixMiddleware() mwBase.MiddleWare {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
 			//无法连接，熔断
-			hystrixErr := hystrix.Do(clientMeta.ServiceName, func() (err error) {
+			hystrixErr := hystrix.Do(clientMeta.ClientName, func() (err error) {
 				resp, err = next(ctx, req)
 				return err
 			}, nil)
+			circuit,_,_ := hystrix.GetCircuit(clientMeta.ClientName)
+			fmt.Printf("HystrixMiddleware,ServiceName=%s,isOpen=%v,isAllow=%v",clientMeta.ClientName,circuit.IsOpen(),circuit.AllowRequest())
+			fmt.Println()
+			logBase.Debug("HystrixMiddleware,ServiceName=%s,isOpen=%v,isAllow=%v",clientMeta.ClientName,circuit.IsOpen(),circuit.AllowRequest())
 			if hystrixErr != nil {
-				logBase.Debug("HystrixMiddleware,ServiceName=%s,stop")
+				logBase.Debug("HystrixMiddleware,ServiceName=%s,err:%s",clientMeta.ClientName,hystrixErr.Error())
 				return nil, hystrixErr
 			}
-			logBase.Debug("HystrixMiddleware,ServiceName=%s,continue")
-			return resp, hystrixErr
+			return resp, nil
 		}
 	}
 }

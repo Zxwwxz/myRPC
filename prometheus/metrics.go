@@ -3,8 +3,14 @@ package prometheus
 import (
 	"context"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	"google.golang.org/grpc/status"
+	"strconv"
+	"strings"
+)
+
+const (
+	default_start = 100
+	default_width = 100
+	default_count = 5
 )
 
 var (
@@ -15,7 +21,7 @@ var (
 type Metrics struct {
 	requestCounter    *prometheus.CounterVec
 	errcodeCounter    *prometheus.CounterVec
-	latencySummary    *prometheus.SummaryVec
+	latencyHistogram  *prometheus.HistogramVec
 }
 
 func GetClientMetrics()(*Metrics)  {
@@ -26,66 +32,87 @@ func GetServerMetrics()(*Metrics)  {
 	return defaultServerMetrics
 }
 
-func initMetrics()  {
-	defaultClientMetrics = newServerMetrics()
-	defaultServerMetrics = newServerMetrics()
+func initMetrics(clientHistogram,serverHistogram string)  {
+	defaultClientMetrics = newClientMetrics(getHistogram(clientHistogram))
+	defaultServerMetrics = newServerMetrics(getHistogram(serverHistogram))
+}
+
+func getHistogram(histogram string)(start,width float64,count int)  {
+	start = default_start
+	width = default_width
+	count = default_count
+	histogramSlice := strings.Split(histogram,",")
+	if len(histogramSlice) != 3 {
+		return start,width,count
+	}
+	if temp, err := strconv.ParseFloat(histogramSlice[0], 64);err == nil {
+		start = temp
+	}
+	if temp, err := strconv.ParseFloat(histogramSlice[1], 64);err == nil {
+		width = temp
+	}
+	if temp, err := strconv.Atoi(histogramSlice[2]) ;err == nil {
+		count = temp
+	}
+	return start,width,count
 }
 
 //生成server metrics实例
-func newServerMetrics() *Metrics {
+func newServerMetrics(start,width float64,count int) *Metrics {
+	requestCounter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "server_request",
+		}, []string{"service", "method"})
+	errcodeCounter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "server_request_errcode",
+		}, []string{"service", "method", "type", "grpc_code"})
+	latencyHistogram := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:       "server_request_time",
+			Help:       "RPC latency distributions.",
+			Buckets:    prometheus.LinearBuckets(start,width,count),
+		}, []string{"service", "method"})
+	prometheus.MustRegister(requestCounter,errcodeCounter,latencyHistogram)
 	return &Metrics{
-		requestCounter: promauto.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "server_request",
-			}, []string{"service", "method"}),
-		errcodeCounter: promauto.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "server_request_errcode",
-			}, []string{"service", "method", "grpc_code"}),
-		latencySummary: promauto.NewSummaryVec(
-			prometheus.SummaryOpts{
-				Name:       "server_request_time",
-				Help:       "RPC latency distributions.",
-				Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-			}, []string{"service", "method"},
-		),
+		requestCounter: requestCounter,
+		errcodeCounter: errcodeCounter,
+		latencyHistogram: latencyHistogram,
 	}
 }
 
 //生成client metrics实例
-func newClientMetrics() *Metrics {
+func newClientMetrics(start,width float64,count int) *Metrics {
+	requestCounter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "client_request",
+		}, []string{"service", "method"})
+	errcodeCounter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "client_request_errcode",
+		}, []string{"service", "method", "grpc_code"})
+	latencyHistogram := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:       "client_request_time",
+			Help:       "RPC latency distributions.",
+			Buckets:    prometheus.LinearBuckets(start,width,count),
+		}, []string{"service", "method"})
+	prometheus.MustRegister(requestCounter,errcodeCounter,latencyHistogram)
 	return &Metrics{
-		requestCounter: promauto.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "client_request",
-			}, []string{"service", "method"}),
-		errcodeCounter: promauto.NewCounterVec(
-			prometheus.CounterOpts{
-				Name: "client_request_errcode",
-			}, []string{"service", "method", "grpc_code"}),
-		latencySummary: promauto.NewSummaryVec(
-			prometheus.SummaryOpts{
-				Name:       "client_request_time",
-				Help:       "RPC latency distributions.",
-				Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-			}, []string{"service", "method"},
-		),
+		requestCounter: requestCounter,
+		errcodeCounter: errcodeCounter,
+		latencyHistogram: latencyHistogram,
 	}
 }
+
 func (m *Metrics) IncRequest(ctx context.Context, serviceName, methodName string) {
 	m.requestCounter.WithLabelValues(serviceName, methodName).Inc()
 }
 
-func (m *Metrics) IncErrcode(ctx context.Context, serviceName, methodName string, err error) {
-	st, _ := status.FromError(err)
-	m.errcodeCounter.WithLabelValues(serviceName, methodName, st.Code().String()).Inc()
+func (m *Metrics) IncErrcode(ctx context.Context, serviceName, methodName string, incType string, code int) {
+	m.errcodeCounter.WithLabelValues(serviceName, methodName, incType, strconv.Itoa(code)).Inc()
 }
 
 func (m *Metrics) ObserveLatency(ctx context.Context, serviceName, methodName string, useTime int64) {
-	m.latencySummary.WithLabelValues(serviceName, methodName).Observe(float64(useTime))
+	m.latencyHistogram.WithLabelValues(serviceName, methodName).Observe(float64(useTime))
 }
-
-
-
-
-
