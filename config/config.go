@@ -77,7 +77,7 @@ type LimitConf struct {
 // 追踪配置
 type TraceConf struct {
 	SwitchOn      bool       `yaml:"switch_on"`
-	ReportAddr    string     `yaml:"report_addr"`
+	ReportAddr    string     `yaml:"addr"`
 	SampleType    string     `yaml:"sample_type"`
 	SampleRate    float64    `yaml:"sample_rate"`
 }

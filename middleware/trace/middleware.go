@@ -61,11 +61,11 @@ func TraceServiceMiddleware() mwBase.MiddleWare {
 				ext.RPCServerOption(parentSpanContext),
 				ext.SpanKindRPCServer,
 			)
+			defer serverSpan.Finish()
 			serverSpan.SetTag("trace_id", trace.GetTraceId(ctx))
 			logBase.Debug("TraceServiceMiddleware,serverSpan=%v",serverSpan)
 			ctx = opentracing.ContextWithSpan(ctx, serverSpan)
 			resp, err = next(ctx, req)
-			serverSpan.Finish()
 			return
 		}
 	}
@@ -86,7 +86,8 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 				opentracing.Tag{Key: "trace_id", Value: trace.GetTraceId(ctx)},
 			}
 			clientMeta := meta.GetClientMeta(ctx)
-			clientSpan := tracer.StartSpan(clientMeta.ServiceName, opts...)
+			clientSpan := tracer.StartSpan(clientMeta.ClientName, opts...)
+			defer clientSpan.Finish()
 			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				md = metadata.Pairs()
@@ -104,7 +105,6 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 				clientSpan.LogFields(log.String("event", "error"), log.String("message", err.Error()))
 			}
 			logBase.Debug("TraceClientMiddleware,clientSpan=%v",clientSpan)
-			clientSpan.Finish()
 			return
 		}
 	}
@@ -125,7 +125,7 @@ func TraceIdClientMiddleware() mwBase.MiddleWare {
 			if len(traceId) == 0 {
 				traceId = trace.GenTraceId()
 			}
-			logBase.Debug("TraceIdClientMiddleware,traceId=%v",traceId)
+			logBase.Debug("TraceIdClientMiddleware,traceId=%s",traceId)
 			ctx = trace.WithTraceId(ctx, traceId)
 			resp, err = next(ctx, req)
 			return

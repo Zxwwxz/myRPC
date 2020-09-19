@@ -21,3 +21,17 @@ func (c *Controller)Run{{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{
 }
 {{end}}
 `
+
+var ctrTemplateStreamFuncFile = `
+package controller
+
+import (
+	{{.Package.Name}} "{{.ImportPreFix}}/generate"
+)
+
+{{range .Rpc}}
+func (c *Controller)Run{{.Name}}(req {{$.Package.Name}}.{{$.Service.Name}}_{{.Name}}Server) (err error) {
+	return nil
+}
+{{end}}
+`

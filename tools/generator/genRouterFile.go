@@ -47,3 +47,41 @@ func (s *Router)MwFunc{{.Name}}(ctx context.Context, req interface{}) (rsp inter
 }
 {{end}}
 `
+
+var routerTemplateStreamFuncFile = `
+package router
+
+import (
+	"context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"{{.ImportPreFix}}/controller"
+	{{.Package.Name}} "{{.ImportPreFix}}/generate"
+	"myRPC/service"
+)
+
+{{range .Rpc}}
+func (s *Router){{.Name}}(req {{$.Package.Name}}.{{$.Service.Name}}_{{.Name}}Server) (err error) {
+	ctx,err := service.InitServiceFunc(req.Context(),"{{.Name}}")
+	if err != nil {
+		return status.Error(codes.InvalidArgument, err.Error())
+	}
+	resultMwFunc := service.BuildServerMiddleware(s.MwFunc{{.Name}},nil,nil)
+	_,err = resultMwFunc(ctx,req)
+    if err != nil {
+		return status.Error(codes.Internal, err.Error())
+	}
+	return nil
+}
+
+func (s *Router)MwFunc{{.Name}}(ctx context.Context, req interface{}) (rsp interface{}, err error) {
+	newReq := req.({{$.Package.Name}}.{{$.Service.Name}}_{{.Name}}Server)
+	serverController := &controller.Controller{}
+	err = serverController.Run{{.Name}}(newReq)
+	if err != nil {
+		return
+	}
+	return nil,nil
+}
+{{end}}
+`

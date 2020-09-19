@@ -79,6 +79,8 @@ func (commonClient *CommonClient)initClientMeta(reqCtx context.Context,serviceNa
 		ServiceName:serviceName,
 		ServiceMethod:serviceMethod,
 		ClientName:commonClient.serviceConf.Base.ServiceName,
+		CallerType:meta.Caller_type_balance,
+		CallerMode:meta.Caller_mode_simple,
 		MaxReconnectNum: meta.Default_max_reconnect,
 	}
 	for _,option := range options{

@@ -5,20 +5,10 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-client-go"
 	"github.com/uber/jaeger-client-go/config"
-	"github.com/uber/jaeger-client-go/transport/zipkin"
 	"io"
 )
 //搭建java，elasticsearch，zipkin，jaeger
 func Init(service string) (opentracing.Tracer, io.Closer) {
-	transport, err := zipkin.NewHTTPTransport(
-		"http://47.92.212.70:9411/api/v1/spans",
-		zipkin.HTTPBatchSize(1),
-		zipkin.HTTPLogger(jaeger.StdLogger),
-	)
-	if err != nil {
-		fmt.Println("NewHTTPTransport err:",err)
-		return nil,nil
-	}
 	cfg := &config.Configuration{
 		Sampler: &config.SamplerConfig{
 			Type:  "const",
@@ -26,13 +16,11 @@ func Init(service string) (opentracing.Tracer, io.Closer) {
 		},
 		Reporter: &config.ReporterConfig{
 			LogSpans: true,
+			LocalAgentHostPort:"47.92.212.70:6831",
 		},
 		ServiceName:service,
 	}
-	r := jaeger.NewRemoteReporter(transport)
-	tracer, closer, err := cfg.NewTracer(
-		config.Logger(jaeger.StdLogger),
-		config.Reporter(r))
+	tracer, closer, err := cfg.NewTracer(config.Logger(jaeger.StdLogger))
 	if err != nil {
 		fmt.Println("NewTracer err:",err)
 		return nil,nil

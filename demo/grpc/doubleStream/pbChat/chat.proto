@@ -1,0 +1,14 @@
+syntax = "proto3";
+package pbChat;
+
+message ReqStruct {
+    string reqMsg = 1;
+}
+
+message RspStruct{
+    string rspMsg = 1;
+}
+
+service ChatServer {
+    rpc Chat(stream ReqStruct) returns (stream RspStruct) {}
+}

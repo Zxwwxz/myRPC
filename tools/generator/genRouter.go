@@ -46,7 +46,11 @@ func(g *generatorRouter)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 		defer file.Close()
 
 		t := template.New("Router"+rpc.Name)
-		t, err = t.Parse(routerTemplateFuncFile)
+		tempFile := routerTemplateFuncFile
+		if rpc.StreamsRequest == true && rpc.StreamsReturns == true {
+			tempFile = routerTemplateStreamFuncFile
+		}
+		t, err = t.Parse(tempFile)
 		if err != nil {
 			continue
 		}

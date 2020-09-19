@@ -218,3 +218,7 @@ func BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles
 	m := mwBase.Chain(middles...)
 	return m(handle)
 }
+
+func Stop() {
+
+}

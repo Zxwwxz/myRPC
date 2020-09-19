@@ -44,7 +44,11 @@ func(g *generatorClient)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 		}
 		defer file.Close()
 		t := template.New("client"+rpc.Name)
-		t, err = t.Parse(clientTemplateFuncFile)
+		tempFile := clientTemplateFuncFile
+		if rpc.StreamsRequest == true && rpc.StreamsReturns == true {
+			tempFile = clientTemplateStreamFuncFile
+		}
+		t, err = t.Parse(tempFile)
 		if err != nil {
 			continue
 		}

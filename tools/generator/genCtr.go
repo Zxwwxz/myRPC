@@ -47,7 +47,11 @@ func(g *generatorCtr)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) 
 		}
 		defer file.Close()
 		t := template.New("Ctr"+rpc.Name)
-		t, err = t.Parse(ctrTemplateFuncFile)
+		tempFile := ctrTemplateFuncFile
+		if rpc.StreamsRequest == true && rpc.StreamsReturns == true {
+			tempFile = ctrTemplateStreamFuncFile
+		}
+		t, err = t.Parse(tempFile)
 		if err != nil {
 			continue
 		}

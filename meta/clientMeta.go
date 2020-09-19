@@ -19,7 +19,16 @@ const (
 	Default_max_reconnect = 3
 )
 
+const (
+	//简单模式
+	Caller_mode_simple = 1
+	//流模式
+	Caller_mode_stream = 2
+)
+
 type ClientMetaOption func(*ClientMeta)
+
+type ModeFunc func(interface{})
 
 type ClientMeta struct {
 	//服务端服务名
@@ -34,6 +43,10 @@ type ClientMeta struct {
 	CallerType int
 	//当调用类型是3时，指定的服务id
 	CallerServerId int
+	//调用模式
+	CallerMode int
+	//流模式回调函数
+	CallerModeFunc ModeFunc
 	//调用失败最大重连次数
 	MaxReconnectNum int
 	//负载均衡关键字
@@ -64,6 +77,18 @@ func SetCallerServerId(callerServerId int) ClientMetaOption {
 func SetMaxReconnectNum(maxReconnectNum int) ClientMetaOption {
 	return func(clientMeta *ClientMeta) {
 		clientMeta.MaxReconnectNum = maxReconnectNum
+	}
+}
+
+func SetCallerMode(callerMode int) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.CallerMode = callerMode
+	}
+}
+
+func SetCallerModeFunc(callerModeFunc ModeFunc) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.CallerModeFunc = callerModeFunc
 	}
 }
 
