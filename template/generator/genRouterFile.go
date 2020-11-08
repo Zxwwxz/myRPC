@@ -3,7 +3,25 @@ package generator
 var routerTemplateFile = `
 package router
 
-type Router struct {}
+import (
+    "myRPC/myService/{{.ServiceName}}/controller"
+)
+
+type Router struct {
+    Controller *controller.Controller
+}
+
+func NewRouter(controller *controller.Controller) *Router {
+    return &Router{Controller:controller}
+}
+
+func (router *Router)SetController(controller *controller.Controller)()  {
+    router.Controller = controller
+}
+
+func (router *Router)GetController()(*controller.Controller)  {
+    return router.Controller
+}
 `
 
 var routerTemplateFuncFile = `
@@ -13,18 +31,16 @@ import (
 	"context"
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"
-	"{{.ImportPreFix}}/controller"
-	{{.Package.Name}} "{{.ImportPreFix}}/generate"
-	"myRPC/service"
+	{{.Package.Name}} "{{.ImportPreFix}}/proto"
 )
 
 {{range .Rpc}}
 func (s *Router){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
-	ctx,err = service.InitServiceFunc(ctx,"{{.Name}}")
+	ctx,err = s.GetController().GetCommonService().InitServiceFunc(ctx,"{{.Name}}")
 	if err != nil {
 		return rsp,status.Error(codes.InvalidArgument, err.Error())
 	}
-	resultMwFunc := service.BuildServerMiddleware(s.MwFunc{{.Name}},nil,nil)
+	resultMwFunc := s.GetController().GetCommonService().BuildServerMiddleware(s.MwFunc{{.Name}},nil,nil)
 	newRsp,err := resultMwFunc(ctx,req)
     if err != nil {
 		return nil,status.Error(codes.Internal, err.Error())
@@ -38,8 +54,7 @@ func (s *Router){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.Reques
 
 func (s *Router)MwFunc{{.Name}}(ctx context.Context, req interface{}) (rsp interface{}, err error) {
 	newReq := req.(*{{$.Package.Name}}.{{.RequestType}})
-	serverController := &controller.Controller{}
-	rsp,err = serverController.Run{{.Name}}(ctx,newReq)
+	rsp,err = s.GetController().Run{{.Name}}(ctx,newReq)
 	if err != nil {
 		return
 	}
@@ -55,18 +70,16 @@ import (
 	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"{{.ImportPreFix}}/controller"
-	{{.Package.Name}} "{{.ImportPreFix}}/generate"
-	"myRPC/service"
+	{{.Package.Name}} "{{.ImportPreFix}}/proto"
 )
 
 {{range .Rpc}}
 func (s *Router){{.Name}}(req {{$.Package.Name}}.{{$.Service.Name}}_{{.Name}}Server) (err error) {
-	ctx,err := service.InitServiceFunc(req.Context(),"{{.Name}}")
+	ctx,err := s.GetController().GetCommonService().InitServiceFunc(req.Context(),"{{.Name}}")
 	if err != nil {
 		return status.Error(codes.InvalidArgument, err.Error())
 	}
-	resultMwFunc := service.BuildServerMiddleware(s.MwFunc{{.Name}},nil,nil)
+	resultMwFunc := s.GetController().GetCommonService().BuildServerMiddleware(s.MwFunc{{.Name}},nil,nil)
 	_,err = resultMwFunc(ctx,req)
     if err != nil {
 		return status.Error(codes.Internal, err.Error())
@@ -76,8 +89,7 @@ func (s *Router){{.Name}}(req {{$.Package.Name}}.{{$.Service.Name}}_{{.Name}}Ser
 
 func (s *Router)MwFunc{{.Name}}(ctx context.Context, req interface{}) (rsp interface{}, err error) {
 	newReq := req.({{$.Package.Name}}.{{$.Service.Name}}_{{.Name}}Server)
-	serverController := &controller.Controller{}
-	err = serverController.Run{{.Name}}(newReq)
+	err = s.GetController().Run{{.Name}}(newReq)
 	if err != nil {
 		return
 	}

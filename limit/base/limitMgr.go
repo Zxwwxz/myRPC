@@ -50,3 +50,8 @@ func (l *LimitManager)NewLimiter(limiterType string,params map[interface{}]inter
 	}
 	return nil,errors.New("limiterType illegal")
 }
+
+func (l *LimitManager)Stop() () {
+	l.serverLimiter = nil
+	l.clientLimiter = nil
+}

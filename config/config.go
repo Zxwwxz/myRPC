@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"myRPC/util"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,10 +12,28 @@ import (
 	"strings"
 )
 
-var (
-	serviceConf = &ServiceConf{}
-)
+//可以通过参数修改的服务配置
+type ServiceParams struct {
+	ServiceType   int       `yaml:"service_type"`
+	ServiceId     int       `yaml:"service_id"`
+	ServiceVer    int       `yaml:"service_ver"`
+	ServiceName   string    `yaml:"service_name"`
+	ServicePort   int       `yaml:"service_port"`
+	HttpPort      int       `yaml:"http_port"`
+}
 
+//可以通过http修改的服务配置
+type ServiceHttpParams struct {
+	PrometheusSwitchOn              bool       `yaml:"prometheus_switch_on"`
+	LogSwitchOn                     bool       `yaml:"log_switch_on"`
+	ClientLimitSwitchOn             bool       `yaml:"client_limit_switch_on"`
+	ServerLimitSwitchOn             bool       `yaml:"server_limit_switch_on"`
+	TraceSwitchOn                   bool       `yaml:"trace_switch_on"`
+	HystrixSwitchOn                 bool       `yaml:"hystrix_switch_on"`
+	LogLevel                        string     `yaml:"log_level"`
+}
+
+//服务的配置
 type ServiceConf struct {
 	Base        BaseConf       `yaml:"base"`
 	Prometheus  PrometheusConf `yaml:"prometheus"`
@@ -27,6 +44,7 @@ type ServiceConf struct {
 	Trace       TraceConf      `yaml:"trace"`
 	Balance     BalanceConf    `yaml:"balance"`
 	Hystrix     HystrixConf    `yaml:"hystrix"`
+	Http        HttpConf       `yaml:"http"`
 	Other       interface{}    `yaml:"other"`
 
 	RootDir    string `yaml:"-"`
@@ -47,16 +65,15 @@ type BaseConf struct {
 
 // 监控配置
 type PrometheusConf struct {
-	SwitchOn       bool `yaml:"switch_on"`
-	ListenPort     int  `yaml:"listen_port"`
+	SwitchOn       bool     `yaml:"switch_on"`
 	ClientHistogram string  `yaml:"client_histogram"`
 	ServerHistogram string  `yaml:"server_histogram"`
 }
 
 // 注册配置
 type RegistryConf struct {
-	Type             string        `yaml:"type"`
-	Params           interface{}  `yaml:"params"`
+	Type             string         `yaml:"type"`
+	Params           interface{}    `yaml:"params"`
 }
 
 // 日志配置
@@ -64,14 +81,14 @@ type LogConf struct {
 	SwitchOn      bool          `yaml:"switch_on"`
 	Level         string        `yaml:"level"`
 	ChanSize      int           `yaml:"chan_size"`
-	Params        interface{}  `yaml:"params"`
+	Params        interface{}   `yaml:"params"`
 }
 
 // 限流配置
 type LimitConf struct {
-	SwitchOn   bool          `yaml:"switch_on"`
-	Type       string        `yaml:"type"`
-	Params     interface{}  `yaml:"params"`
+	SwitchOn   bool             `yaml:"switch_on"`
+	Type       string           `yaml:"type"`
+	Params     interface{}      `yaml:"params"`
 }
 
 // 追踪配置
@@ -97,9 +114,16 @@ type HystrixConf struct {
 	RequestVolumeThreshold   int        `yaml:"request_volume_threshold"`
 }
 
+type HttpConf struct {
+	SwitchOn        bool             `yaml:"switch_on"`
+	PprofSwitchOn   bool             `yaml:"pprof_switch_on"`
+	HttpPort        int              `yaml:"http_port"`
+}
+
 // 初始化配置
-func InitConfig() (err error) {
-	err = initDir()
+func NewConfig(configDir string,serviceParams ServiceParams) (serviceConf *ServiceConf,err error) {
+	serviceConf = &ServiceConf{}
+	err = serviceConf.initDir(configDir)
 	if err != nil {
 		return
 	}
@@ -113,11 +137,12 @@ func InitConfig() (err error) {
 	if err != nil {
 		return
 	}
+	serviceConf.paramsMergeConfig(serviceParams)
 	return
 }
 
 //初始化配置路径
-func initDir() (err error) {
+func (serviceConf *ServiceConf)initDir(configDir string) (err error) {
 	//当前起服务路径
 	exeFilePath, err := filepath.Abs(os.Args[0])
 	if err != nil {
@@ -132,25 +157,56 @@ func initDir() (err error) {
 		return
 	}
 	//当前服务根路径
-	serviceConf.RootDir = path.Join(strings.ToLower(exeFilePath[0:lastIdx]), "..")
+	serviceConf.RootDir = path.Join(strings.ToLower(exeFilePath[0:lastIdx]), ".")
 	//当前服务配置路径
-	serviceConf.ConfigDir = path.Join(serviceConf.RootDir, "./config/", util.GetEnv(), "/config.yaml")
+	if configDir != "" {
+		serviceConf.ConfigDir = configDir
+	}else {
+		serviceConf.ConfigDir = path.Join(serviceConf.RootDir, "./config/", "/config.yaml")
+	}
 	return
 }
 
-func GetConfigDir() string {
+func (serviceConf *ServiceConf)paramsMergeConfig(serviceParams ServiceParams) {
+	if serviceParams.ServiceType != 0 {
+		serviceConf.Base.ServiceType = serviceParams.ServiceType
+	}
+	if serviceParams.ServiceId != 0 {
+		serviceConf.Base.ServiceId = serviceParams.ServiceId
+	}
+	if serviceParams.ServiceName != ""{
+		serviceConf.Base.ServiceName = serviceParams.ServiceName
+	}
+	if serviceParams.ServiceVer != 0 {
+		serviceConf.Base.ServiceVer = serviceParams.ServiceVer
+	}
+	if serviceParams.ServicePort != 0 {
+		serviceConf.Base.ServicePort = serviceParams.ServicePort
+	}
+	if serviceParams.HttpPort != 0 {
+		serviceConf.Http.HttpPort = serviceParams.HttpPort
+	}
+}
+
+func (serviceConf *ServiceConf)HttpMergeConfig(serviceHttpParams ServiceHttpParams) {
+	serviceConf.Prometheus.SwitchOn = serviceHttpParams.PrometheusSwitchOn
+	serviceConf.Log.SwitchOn = serviceHttpParams.LogSwitchOn
+	serviceConf.Hystrix.SwitchOn = serviceHttpParams.HystrixSwitchOn
+	serviceConf.ClientLimit.SwitchOn = serviceHttpParams.ClientLimitSwitchOn
+	serviceConf.ServerLimit.SwitchOn = serviceHttpParams.ServerLimitSwitchOn
+	serviceConf.Trace.SwitchOn = serviceHttpParams.TraceSwitchOn
+	serviceConf.Log.Level = serviceHttpParams.LogLevel
+}
+
+func (serviceConf *ServiceConf)GetConfigDir() string {
 	return serviceConf.ConfigDir
 }
 
-func GetRootDir() string {
+func (serviceConf *ServiceConf)GetRootDir() string {
 	return serviceConf.RootDir
 }
 
-func GetConf() *ServiceConf {
-	return serviceConf
-}
-
-func GetOtherConf() map[interface{}]interface{} {
+func (serviceConf *ServiceConf)GetOtherConf() map[interface{}]interface{} {
 	if serviceConf != nil {
 		return nil
 	}

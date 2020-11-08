@@ -2,28 +2,29 @@ package generator
 
 import (
 	"github.com/ibinarytree/proto"
-	"myRPC/tools/base"
+	toolsBase "myRPC/template/base"
 	"myRPC/util"
 	"os"
 	"path"
 	"text/template"
 )
 
-type generatorClient struct {}
+type generatorRouter struct {}
 
-func NewGeneratorClient()(*generatorClient){
-	return &generatorClient{}
+func NewGeneratorRouter()(*generatorRouter){
+	return &generatorRouter{}
 }
 
-func(g *generatorClient)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
-	filename := path.Join(opt.OutputPath, "client/client.go")
+func(g *generatorRouter)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
+	filename := path.Join(opt.OutputPath, "router/router.go")
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	t := template.New("client")
-	t, err = t.Parse(clientTemplateFile)
+
+	t := template.New("Router")
+	t, err = t.Parse(routerTemplateFile)
 	if err != nil {
 		return err
 	}
@@ -31,10 +32,10 @@ func(g *generatorClient)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 	if err != nil {
 		return err
 	}
-	for _,rpc := range meta.Rpc{
+	for _,rpc := range meta.Rpc {
 		newMeta := *meta
 		newMeta.Rpc = []*proto.RPC{rpc}
-		filename := path.Join(opt.OutputPath, "client/"+rpc.Name+".go" )
+		filename := path.Join(opt.OutputPath, "router/"+rpc.Name+".go" )
 		if util.IsFileExist(filename) {
 			continue
 		}
@@ -43,10 +44,11 @@ func(g *generatorClient)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 			continue
 		}
 		defer file.Close()
-		t := template.New("client"+rpc.Name)
-		tempFile := clientTemplateFuncFile
+
+		t := template.New("Router"+rpc.Name)
+		tempFile := routerTemplateFuncFile
 		if rpc.StreamsRequest == true && rpc.StreamsReturns == true {
-			tempFile = clientTemplateStreamFuncFile
+			tempFile = routerTemplateStreamFuncFile
 		}
 		t, err = t.Parse(tempFile)
 		if err != nil {
@@ -60,6 +62,6 @@ func(g *generatorClient)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaDat
 	return nil
 }
 
-func(g *generatorClient)Name() string{
-	return "gen_client"
+func(g *generatorRouter)Name() string{
+	return "gen_Router"
 }

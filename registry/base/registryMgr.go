@@ -42,6 +42,10 @@ func (r *RegistryManager)NewRegister(registryType string,params map[interface{}]
 	return nil,errors.New("registryType illegal")
 }
 
+func (r *RegistryManager)Stop()(){
+
+}
+
 func (r *RegistryManager)RegisterServer(server *register.Service)(err error){
 	if r.curRegister != nil {
 		return r.curRegister.Register(server)

@@ -2,7 +2,7 @@ package generator
 
 import (
 	"fmt"
-	toolsBase "myRPC/tools/base"
+	toolsBase "myRPC/template/base"
 )
 
 var GeneratorMgrObj = &GeneratorMgr{}
@@ -21,6 +21,7 @@ func(g *GeneratorMgr)Register(){
 		NewGeneratorCtr(),
 		NewGeneratorConfig(),
 		NewGeneratorClient(),
+		NewGeneratorTest(),
 	)
 }
 

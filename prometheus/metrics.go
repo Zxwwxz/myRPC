@@ -13,28 +13,16 @@ const (
 	default_count = 5
 )
 
-var (
-	defaultClientMetrics  *Metrics
-	defaultServerMetrics  *Metrics
-)
-
 type Metrics struct {
 	requestCounter    *prometheus.CounterVec
 	errcodeCounter    *prometheus.CounterVec
 	latencyHistogram  *prometheus.HistogramVec
 }
 
-func GetClientMetrics()(*Metrics)  {
-	return defaultClientMetrics
-}
-
-func GetServerMetrics()(*Metrics)  {
-	return defaultServerMetrics
-}
-
-func initMetrics(clientHistogram,serverHistogram string)  {
-	defaultClientMetrics = newClientMetrics(getHistogram(clientHistogram))
-	defaultServerMetrics = newServerMetrics(getHistogram(serverHistogram))
+func NewMetrics(clientHistogram,serverHistogram string)(*Metrics,*Metrics)  {
+	defaultClientMetrics := newClientMetrics(getHistogram(clientHistogram))
+	defaultServerMetrics := newServerMetrics(getHistogram(serverHistogram))
+	return defaultClientMetrics,defaultServerMetrics
 }
 
 func getHistogram(histogram string)(start,width float64,count int)  {

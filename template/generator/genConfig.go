@@ -1,8 +1,7 @@
 package generator
 
 import (
-	"myRPC/util"
-	toolsBase "myRPC/tools/base"
+	"myRPC/template/base"
 	"os"
 	"path"
 	"text/template"
@@ -15,13 +14,13 @@ func NewGeneratorConfig()(*generatorConfig){
 }
 
 func(g *generatorConfig)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
-	envStr := util.GetEnv()
-	err := g.CreateFile(envStr,opt,meta)
+	err := g.CreateFile(opt,meta,"config/")
+	err = g.CreateFile(opt,meta,"test/config/")
 	return err
 }
 
-func(g *generatorConfig)CreateFile(env string,opt *toolsBase.Option,meta *toolsBase.ServiceMetaData)(err error){
-	filename := path.Join(opt.OutputPath, "config/",env, "/config.yaml")
+func(g *generatorConfig)CreateFile(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData,dir string)(err error){
+	filename := path.Join(opt.OutputPath, dir, "/config.yaml")
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		return err

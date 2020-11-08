@@ -2,7 +2,7 @@ package generator
 
 import (
 	"github.com/ibinarytree/proto"
-	toolsBase "myRPC/tools/base"
+	toolsBase "myRPC/template/base"
 	"os"
 	"path"
 )

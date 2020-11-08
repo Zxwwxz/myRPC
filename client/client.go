@@ -24,7 +24,7 @@ import (
 //公共客户端调用
 type CommonClient struct {
 	//服务配置
-	serviceConf *config.ServiceConf
+	clientConf *config.ServiceConf
 	//服务限流
 	limiter  limiter.LimitInterface
 	//服务负载
@@ -33,10 +33,10 @@ type CommonClient struct {
 	register  register.RegisterInterface
 }
 
-func InitClient(reqCtx context.Context,serviceName,serviceMethod string,options []meta.ClientMetaOption) (context.Context,*CommonClient,error) {
+func NewClient(reqCtx context.Context,serviceName,serviceMethod string,callerMode int,clientConf *config.ServiceConf,options []meta.ClientMetaOption) (context.Context,*CommonClient,error) {
 	//初始配置
 	commonClient := &CommonClient{}
-	commonClient.serviceConf = config.GetConf()
+	commonClient.clientConf = clientConf
 	err := commonClient.initLimit()
 	if err != nil {
 		return nil,nil,err
@@ -49,7 +49,7 @@ func InitClient(reqCtx context.Context,serviceName,serviceMethod string,options 
 	if err != nil {
 		return nil,nil,err
 	}
-	ctx,err := commonClient.initClientMeta(reqCtx,serviceName,serviceMethod,options)
+	ctx,err := commonClient.initClientMeta(reqCtx,serviceName,serviceMethod,callerMode,options)
 	if err != nil {
 		return nil,nil,err
 	}
@@ -57,7 +57,7 @@ func InitClient(reqCtx context.Context,serviceName,serviceMethod string,options 
 }
 
 func (commonClient *CommonClient)initLimit()(error)  {
-	if commonClient.serviceConf.ClientLimit.SwitchOn == false{
+	if commonClient.clientConf.ClientLimit.SwitchOn == false{
 		return nil
 	}
 	commonClient.limiter = limitBase.GetLimitMgr().GetClientLimiter()
@@ -74,13 +74,13 @@ func (commonClient *CommonClient)initBalance()(error) {
 	return nil
 }
 
-func (commonClient *CommonClient)initClientMeta(reqCtx context.Context,serviceName,serviceMethod string,options []meta.ClientMetaOption)(context.Context,error) {
+func (commonClient *CommonClient)initClientMeta(reqCtx context.Context,serviceName,serviceMethod string,callerMode int,options []meta.ClientMetaOption)(context.Context,error) {
 	clientMeta := &meta.ClientMeta{
 		ServiceName:serviceName,
 		ServiceMethod:serviceMethod,
-		ClientName:commonClient.serviceConf.Base.ServiceName,
+		ClientName:commonClient.clientConf.Base.ServiceName,
 		CallerType:meta.Caller_type_balance,
-		CallerMode:meta.Caller_mode_simple,
+		CallerMode:callerMode,
 		MaxReconnectNum: meta.Default_max_reconnect,
 	}
 	for _,option := range options{
@@ -94,23 +94,23 @@ func (commonClient *CommonClient)BuildClientMiddleware(handle mwBase.MiddleWareF
 	var middles []mwBase.MiddleWare
 	//前置中间件
 	middles = append(middles,frontMiddles...)
-	if commonClient.serviceConf.Log.SwitchOn {
+	if commonClient.clientConf.Log.SwitchOn {
 		//日志中间件
 		middles = append(middles,mwLog.LogClientMiddleware())
 	}
-	if commonClient.serviceConf.ClientLimit.SwitchOn && commonClient.limiter != nil{
+	if commonClient.clientConf.ClientLimit.SwitchOn && commonClient.limiter != nil{
 		//限流中间件
 		middles = append(middles,mwLimit.ClientLimitMiddleware(commonClient.limiter))
 	}
-	if commonClient.serviceConf.Hystrix.SwitchOn {
+	if commonClient.clientConf.Hystrix.SwitchOn {
 		//熔断中间件
 		middles = append(middles,mwHystrix.HystrixMiddleware())
 	}
-	if commonClient.serviceConf.Prometheus.SwitchOn {
+	if commonClient.clientConf.Prometheus.SwitchOn {
 		//监控中间件
 		middles = append(middles,mwPrometheus.PrometheusClientMiddleware())
 	}
-	if commonClient.serviceConf.Trace.SwitchOn {
+	if commonClient.clientConf.Trace.SwitchOn {
 		//追踪id中间件
 		middles = append(middles,mwTrace.TraceIdClientMiddleware())
 		//追踪中间件

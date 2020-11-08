@@ -1,7 +1,7 @@
 package generator
 
 import (
-	toolsBase "myRPC/tools/base"
+	toolsBase "myRPC/template/base"
 	"myRPC/util"
 	"os"
 	"path"
@@ -15,7 +15,7 @@ func NewGeneratorMain()(*generatorMain){
 }
 
 func(g *generatorMain)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
-	filename := path.Join(opt.OutputPath, "main/main.go")
+	filename := path.Join(opt.OutputPath, "main.go")
 	if util.IsFileExist(filename) {
 		return nil
 	}

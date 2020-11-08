@@ -36,7 +36,7 @@ func GetTracer()(opentracing.Tracer)  {
 	return tracer
 }
 
-func Close()(error)  {
+func Stop()(error)  {
 	return closer.Close()
 }
 

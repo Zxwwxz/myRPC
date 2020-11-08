@@ -1,21 +1,22 @@
 package generator
 
 import (
-	toolsBase "myRPC/tools/base"
+	toolsBase "myRPC/template/base"
 	"os"
 	"path"
 )
 
 var dirList = []string{
 	"client",
+	"config",
 	"controller",
-	"scripts",
-	"router",
-	"config/product",
-	"config/test",
+	"proto",
+	"logs",
 	"model",
-	"generate",
-	"main",
+	"router",
+	"scripts",
+	"test",
+	"test/config",
 }
 
 type generatorDir struct {}

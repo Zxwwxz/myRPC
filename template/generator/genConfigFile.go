@@ -13,7 +13,6 @@ base:
     - {{.Name}}{{end}}
 prometheus:
   switch_on: false
-  listen_port: 9091
   client_histogram: 100,100,5
   server_histogram: 100,100,5
 registry:
@@ -29,7 +28,7 @@ log:
   level: debug
   chan_size: 10000
   params:
-    path: ../logs/
+    path: ./logs/
     max_size: 5000000
 client_limit:
   switch_on: false
@@ -45,7 +44,7 @@ server_limit:
     all_water: 10000
 trace:
   switch_on: false
-  addr: http://47.92.212.70:6831
+  addr: 47.92.212.70:6831
   sample_type: const
   sample_rate: 1
 balance:
@@ -57,5 +56,9 @@ hystrix:
   sleep_window: 1
   error_percent_threshold: 30
   request_volume_threshold: 10
+http:
+  switch_on: false
+  pprof_switch_on: false
+  http_port: 18888
 other:
 `

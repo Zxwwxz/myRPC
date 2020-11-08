@@ -17,7 +17,7 @@ func PrometheusServiceMiddleware() mwBase.MiddleWare {
 			serverMeta := meta.GetServerMeta(ctx)
 			//监控调用量
 			logBase.Debug("PrometheusServiceMiddleware")
-			serverMetrics := prometheus.GetServerMetrics()
+			serverMetrics := prometheus.GetPrometheusManager().GetServerMetrics()
 			serverMetrics.IncRequest(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod)
 			startTime := time.Now()
 			resp, err = next(ctx, req)
@@ -38,7 +38,7 @@ func PrometheusClientMiddleware() mwBase.MiddleWare {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
 			logBase.Debug("PrometheusClientMiddleware")
-			clientMetrics := prometheus.GetClientMetrics()
+			clientMetrics := prometheus.GetPrometheusManager().GetClientMetrics()
 			//监控调用量
 			clientMetrics.IncRequest(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod)
 			startTime := time.Now()

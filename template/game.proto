@@ -2,11 +2,20 @@ syntax = "proto3";
 package pbGame;
 
 message StopGameRequest {
-  string startName = 1;
+  string stopName = 1;
 }
 
 message StopGameResponse {
-  string startCode = 1;
+  int64 stopCode = 1;
+  string stopMsg = 2;
+}
+
+message Start1GameRequest {
+  string startName = 1;
+}
+
+message Start1GameResponse {
+  int64 startCode = 1;
   string startMsg = 2;
 }
 
@@ -20,5 +29,6 @@ message MailGameResponse {
 
 service GameService {
   rpc StopGame(StopGameRequest) returns (StopGameResponse){}
+  rpc StartGame(StartGameRequest) returns (StartGameResponse){}
   rpc MailGame(stream MailGameRequest) returns (stream MailGameResponse){}
 }

@@ -44,3 +44,7 @@ func (l *BalanceManager)NewBalancer(balanceType string) (newBalancer balancer.Ba
 	}
 	return nil,errors.New("balanceType illegal")
 }
+
+func (l *BalanceManager)Stop()() {
+
+}

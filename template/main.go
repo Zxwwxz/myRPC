@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/urfave/cli"
-	toolsBase "myRPC/tools/base"
-	"myRPC/tools/generator"
+	toolsBase "myRPC/template/base"
+	"myRPC/template/generator"
 	"os"
 )
 

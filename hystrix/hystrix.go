@@ -37,3 +37,7 @@ func InitHystrix(serviceName string,timeout,maxConcurrentRequests,requestVolumeT
 	})
 	return nil
 }
+
+func Stop()  {
+
+}

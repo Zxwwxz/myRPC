@@ -1,0 +1,23 @@
+syntax = "proto3";
+package pbAAA;
+
+message BBBRe {
+  string bbbr = 1;
+}
+
+message BBBRs {
+  string bbbs = 1;
+}
+
+message CCCRe {
+  string cccr = 1;
+}
+
+message CCCRs {
+  string cccs = 1;
+}
+
+service DDDSer {
+  rpc BBBF(BBBRe) returns (BBBRs){}
+  rpc CCCF(stream CCCRe) returns (stream CCCRs){}
+}

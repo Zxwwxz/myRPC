@@ -25,16 +25,18 @@ var (
 
 //日志管理器
 type LogMgr struct {
-	logType   map[string]int
-	loggers   map[string]logger.LoggerInterface
+	switchOn    bool
+	logType     map[string]int
+	loggers     map[string]logger.LoggerInterface
 	chanSize    int
 	level       string
 	logDataChan chan *logger.LogData
 }
 
 //服务创建时初始化日志管理器
-func InitLogger(level string, chanSize int,params map[interface{}]interface{}) {
+func InitLogger(switchOn bool,level string, chanSize int,params map[interface{}]interface{}) {
 	logMgr = &LogMgr{
+		switchOn:    false,
 		chanSize:    default_chan_size,
 		level:       log_type_debug,
 		logDataChan: make(chan *logger.LogData, chanSize),
@@ -42,6 +44,7 @@ func InitLogger(level string, chanSize int,params map[interface{}]interface{}) {
 	if chanSize != 0 {
 		logMgr.chanSize = chanSize
 	}
+	logMgr.switchOn = switchOn
 	_ = logMgr.SetLevel(level)
 	logMgr.logType = map[string]int{log_type_debug:1,log_type_info:2,log_type_warn:3,log_type_fatal:4}
 	logMgr.loggers = make(map[string]logger.LoggerInterface,len(logMgr.logType))
@@ -60,6 +63,14 @@ func Stop() {
 
 func GetLogMgr()(*LogMgr) {
 	return logMgr
+}
+
+func (l *LogMgr)SetSwitchOn(switchOn bool)(error) {
+	if l == nil {
+		return errors.New("LogMgr nil")
+	}
+	l.switchOn = switchOn
+	return nil
 }
 
 //设置日志等级
@@ -95,9 +106,13 @@ func (l *LogMgr) run() {
 	}
 }
 
+func (l *LogMgr) Stop() {
+
+}
+
 //将日志写入通道中
 func writeLog(level string, format string, args ...interface{}) {
-	if logMgr == nil {
+	if logMgr == nil || logMgr.switchOn == false{
 		return
 	}
 	//日志等级不足以打印

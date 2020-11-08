@@ -92,6 +92,18 @@ func SetCallerModeFunc(callerModeFunc ModeFunc) ClientMetaOption {
 	}
 }
 
+func SetServiceName(serviceName string) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.ServiceName = serviceName
+	}
+}
+
+func SetServiceMethod(serviceMethod string) ClientMetaOption {
+	return func(clientMeta *ClientMeta) {
+		clientMeta.ServiceMethod = serviceMethod
+	}
+}
+
 type ClientMetaContextKey struct{}
 
 func GetClientMeta(ctx context.Context) *ClientMeta {

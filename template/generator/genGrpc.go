@@ -2,7 +2,7 @@ package generator
 
 import (
 	"fmt"
-	toolsBase "myRPC/tools/base"
+	toolsBase "myRPC/template/base"
 	"os/exec"
 	"path"
 )
@@ -14,12 +14,12 @@ func NewGeneratorGrpc()(*generatorGrpc){
 }
 
 func(g *generatorGrpc)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
-	fullPath := path.Join(opt.OutputPath,"generate/",opt.ProtoPath)
+	fullPath := path.Join(opt.OutputPath,"proto/",opt.ProtoPath)
 	_,err := toolsBase.CopyFile(opt.ProtoPath,fullPath)
 	if err != nil {
 		return err
 	}
-	fullParams := fmt.Sprintf("plugins=grpc:%s/generate/",opt.OutputPath)
+	fullParams := fmt.Sprintf("plugins=grpc:%s/proto/",opt.OutputPath)
 	cmd := exec.Command("protoc","--go_out",fullParams,opt.ProtoPath)
 	err = cmd.Run()
 	if err != nil {

@@ -2,11 +2,32 @@ package generator
 var clientTemplateFile = `
 package {{.ServiceName}}Client
 
+import (
+	"myRPC/service"
+)
+
+var ClientCaller *{{.ServiceName}}Client
+
 type {{.ServiceName}}Client struct {
+	CommonService *service.CommonService
 }
 
-func NewClientCall() *{{.ServiceName}}Client {
-	return &{{.ServiceName}}Client{}
+func NewClientCaller(commonService *service.CommonService) {
+	if ClientCaller == nil {
+		ClientCaller = &{{.ServiceName}}Client{commonService}
+	}
+}
+
+func GetClientCaller() (*{{.ServiceName}}Client) {
+	return ClientCaller
+}
+
+func (client *{{.ServiceName}}Client)SetCommonService(commonService *service.CommonService) {
+	client.CommonService = commonService
+}
+
+func (client *{{.ServiceName}}Client)GetCommonService()(commonService *service.CommonService) {
+	return client.CommonService
 }
 `
 
@@ -19,12 +40,12 @@ import (
 	"myRPC/client"
     "myRPC/const"
 	"myRPC/meta"
-	{{.Package.Name}} "{{.ImportPreFix}}/generate"
+	"{{.ImportPreFix}}/proto"
 )
 
 {{range .Rpc}}
-func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}, options []meta.ClientMetaOption) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
-	ctx,clientObj,err := client.InitClient(ctx,"{{$.ServiceName}}","{{.Name}}",options)
+func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, req *{{$.Package.Name}}.{{.RequestType}}, options ...meta.ClientMetaOption) (rsp *{{$.Package.Name}}.{{.ReturnsType}}, err error) {
+	ctx,clientObj,err := client.NewClient(ctx,"{{$.ServiceName}}","{{.Name}}",meta.Caller_mode_simple,c.GetCommonService().GetServiceConf(),options)
 	if err != nil {
 		newErr := rpcConst.ClientInitFailed
 		newErr.Message = err.Error()
@@ -64,12 +85,12 @@ import (
 	"myRPC/client"
 	"myRPC/const"
 	"myRPC/meta"
-	{{.Package.Name}} "{{.ImportPreFix}}/generate"
+	{{.Package.Name}} "{{.ImportPreFix}}/proto"
 )
 
 {{range .Rpc}}
-func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, options []meta.ClientMetaOption) (err error) {
-	ctx,clientObj,err := client.InitClient(ctx,"{{$.ServiceName}}","{{.Name}}",options)
+func (c *{{$.ServiceName}}Client){{.Name}}(ctx context.Context, options ...meta.ClientMetaOption) (err error) {
+	ctx,clientObj,err := client.NewClient(ctx,"{{$.ServiceName}}","{{.Name}}",meta.Caller_mode_stream,c.GetCommonService().GetServiceConf(),options)
 	if err != nil {
 		newErr := rpcConst.ClientInitFailed
 		newErr.Message = err.Error()
