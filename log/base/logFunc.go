@@ -1,5 +1,5 @@
 package logBase
-
+//不同等级的日志打印开放方法
 func Debug(format string, args ...interface{}) {
 	writeLog( "debug", format, args...)
 }

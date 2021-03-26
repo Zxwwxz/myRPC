@@ -10,6 +10,7 @@ import (
 	mwBase "myRPC/middleware/base"
 )
 
+//连接中间件
 func ConnMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
@@ -24,6 +25,7 @@ func ConnMiddleware() mwBase.MiddleWare {
 			if err != nil {
 				return nil, rpcConst.ConnFailed
 			}
+			//保存连接
 			clientMeta.Conn = conn
 			defer conn.Close()
 			return next(ctx, req)

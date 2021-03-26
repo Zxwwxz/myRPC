@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+//当前监控数据是每次调用会进行修改
+//服务器开启普罗米修斯服务后，会定时到当前服务拉取数据，进行统计分析
+//grafana可以设置数据来源是普罗米修斯，进行统计查看
 var prometheusManager *PrometheusManager
 
 type PrometheusManager struct {
@@ -32,6 +35,7 @@ func (prometheusManager *PrometheusManager)GetServerMetrics()(*Metrics)  {
 	return prometheusManager.defaultServerMetrics
 }
 
+//开启http端口监听
 func (prometheusManager *PrometheusManager)AddPrometheusHandler(router *mux.Router,serviceConf *config.ServiceConf)(err error)  {
 	router.HandleFunc("/metrics", func(writer http.ResponseWriter, request *http.Request) {
 		if serviceConf.Prometheus.SwitchOn{
@@ -42,5 +46,4 @@ func (prometheusManager *PrometheusManager)AddPrometheusHandler(router *mux.Rout
 }
 
 func (prometheusManager *PrometheusManager)Stop()  {
-
 }

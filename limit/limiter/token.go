@@ -8,7 +8,7 @@ const (
 	default_token_qps = 10
 	default_token_all_water = 10
 )
-
+//令牌桶限流
 type TokenLimit struct {
 	qps       float64        //令牌桶qps
 	allWater  int        	 //令牌桶最多能装的水大小

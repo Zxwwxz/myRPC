@@ -6,8 +6,11 @@ import (
 )
 
 const (
+	//环境变量key
 	myRPC_ENV   = "myRPC_env"
+	//环境变量正式服value
 	PRODUCT_ENV = "product"
+	//环境变量测试服value
 	TEST_ENV    = "test"
 )
 

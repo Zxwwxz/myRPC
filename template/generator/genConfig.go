@@ -7,6 +7,7 @@ import (
 	"text/template"
 )
 
+//配置创建生成器
 type generatorConfig struct {}
 
 func NewGeneratorConfig()(*generatorConfig){
@@ -14,14 +15,16 @@ func NewGeneratorConfig()(*generatorConfig){
 }
 
 func(g *generatorConfig)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
+	//创建服务配置
 	err := g.CreateFile(opt,meta,"config/")
+	//创建测试服务配置
 	err = g.CreateFile(opt,meta,"test/config/")
 	return err
 }
 
 func(g *generatorConfig)CreateFile(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData,dir string)(err error){
 	filename := path.Join(opt.OutputPath, dir, "/config.yaml")
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		return err
 	}

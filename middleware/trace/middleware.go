@@ -15,6 +15,7 @@ import (
 	"strings"
 )
 
+// 追踪中间件
 type metadataTextMap metadata.MD
 
 func (m metadataTextMap) Set(key, val string) {
@@ -49,6 +50,7 @@ func encodeKeyValue(k, v string) (string, string) {
 func TraceServiceMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
+			//上下文取出md
 			md, ok := metadata.FromIncomingContext(ctx)
 			if !ok {
 				md = metadata.Pairs()
@@ -74,8 +76,11 @@ func TraceServiceMiddleware() mwBase.MiddleWare {
 func TraceClientMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
+			//获取全局追踪器
 			tracer := opentracing.GlobalTracer()
+			//父级上下文
 			var parentSpanCtx opentracing.SpanContext
+			//父级span
 			if parent := opentracing.SpanFromContext(ctx); parent != nil {
 				parentSpanCtx = parent.Context()
 			}
@@ -86,18 +91,20 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 				opentracing.Tag{Key: "trace_id", Value: trace.GetTraceId(ctx)},
 			}
 			clientMeta := meta.GetClientMeta(ctx)
+			//子span
 			clientSpan := tracer.StartSpan(clientMeta.ClientName, opts...)
 			defer clientSpan.Finish()
 			md, ok := metadata.FromOutgoingContext(ctx)
 			if !ok {
 				md = metadata.Pairs()
 			}
-			//span注入到http头
+			//span注入到http头，传递的是map
 			if err := tracer.Inject(clientSpan.Context(), opentracing.HTTPHeaders, metadataTextMap(md)); err != nil {
 				logBase.Warn("TraceClientMiddleware,tracer.Inject,err=%v",err)
 			}
 			ctx = metadata.NewOutgoingContext(ctx, md)
 			ctx = metadata.AppendToOutgoingContext(ctx, "trace_id", trace.GetTraceId(ctx))
+			//子span存入上下文
 			ctx = opentracing.ContextWithSpan(ctx, clientSpan)
 			resp, err = next(ctx, req)
 			if err != nil {
@@ -110,10 +117,12 @@ func TraceClientMiddleware() mwBase.MiddleWare {
 	}
 }
 
+//客户端生成追踪id
 func TraceIdClientMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			var traceId string
+			//从上下文拿到md
 			md, ok := metadata.FromIncomingContext(ctx)
 			if ok {
 				vals, ok := md["trace_id"]
@@ -126,6 +135,7 @@ func TraceIdClientMiddleware() mwBase.MiddleWare {
 				traceId = trace.GenTraceId()
 			}
 			logBase.Debug("TraceIdClientMiddleware,traceId=%s",traceId)
+			//保存追踪id到上下文中
 			ctx = trace.WithTraceId(ctx, traceId)
 			resp, err = next(ctx, req)
 			return

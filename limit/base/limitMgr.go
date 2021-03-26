@@ -22,6 +22,7 @@ func GetLimitMgr()*LimitManager {
 	return limitManager
 }
 
+//客户端服务器限流对象
 func (l *LimitManager)SetClientLimiter(clientLimiter limiter.LimitInterface) {
 	l.clientLimiter = clientLimiter
 }

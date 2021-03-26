@@ -13,6 +13,7 @@ require (
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/garyburd/redigo v1.6.2
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191025150517-4a4ac3fbac33 // indirect
 	github.com/golang/protobuf v1.3.2
@@ -30,6 +31,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/nsqio/go-nsq v1.0.8
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prometheus/client_golang v0.9.2

@@ -36,7 +36,7 @@ var (
 		ErrCode:    4,
 		Message: "all node failed",
 	}
-	//所有节点访问失败
+	//最大重连失败
 	MaxReconnectFailed = &ClientError{
 		ErrCode:    5,
 		Message: "max reconnect failed",

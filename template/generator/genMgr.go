@@ -11,6 +11,7 @@ type GeneratorMgr struct {
 	GenList []GeneratorInf
 }
 
+//注册所有的生成器
 func(g *GeneratorMgr)Register(){
 	g.GenList = append(g.GenList,
 		NewGeneratorMeta(),
@@ -25,6 +26,7 @@ func(g *GeneratorMgr)Register(){
 	)
 }
 
+//执行所有生成器
 func(g *GeneratorMgr)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData){
 	for _,gen := range g.GenList{
 		err := gen.Run(opt,meta)

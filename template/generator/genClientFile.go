@@ -18,7 +18,10 @@ func NewClientCaller(commonService *service.CommonService) {
 	}
 }
 
-func GetClientCaller() (*{{.ServiceName}}Client) {
+func GetClientCaller(commonService *service.CommonService) (*{{.ServiceName}}Client) {
+    if ClientCaller == nil {
+        NewClientCaller(commonService)
+    }
 	return ClientCaller
 }
 

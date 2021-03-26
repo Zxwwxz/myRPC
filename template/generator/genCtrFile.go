@@ -9,8 +9,8 @@ type Controller struct {
     CommonService *service.CommonService
 }
 
-func NewController() *Controller {
-    return &Controller{}
+func NewController(commonService *service.CommonService) *Controller {
+    return &Controller{commonService}
 }
 
 func (controller *Controller)SetCommonService(commonService *service.CommonService) {

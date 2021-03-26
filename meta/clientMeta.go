@@ -6,13 +6,16 @@ import (
 	"myRPC/registry/register"
 )
 
+//客户端中间件参数
 const (
+	//服务路由参数
 	//不指定哪个节点，由均衡算法算出
 	Caller_type_balance = 1
 	//指定服务名称和服务id，调用指定节点
 	Caller_type_one = 2
 	//指定服务名称，调用所有节点
 	Caller_type_all = 3
+	//白名单和黑名单
 )
 
 const (
@@ -20,6 +23,7 @@ const (
 )
 
 const (
+	//grpc模式
 	//简单模式
 	Caller_mode_simple = 1
 	//流模式
@@ -62,6 +66,7 @@ type ClientMeta struct {
 	Conn *grpc.ClientConn
 }
 
+//赋值参数函数
 func SetCallerType(callerType int) ClientMetaOption {
 	return func(clientMeta *ClientMeta) {
 		clientMeta.CallerType = callerType
@@ -106,6 +111,7 @@ func SetServiceMethod(serviceMethod string) ClientMetaOption {
 
 type ClientMetaContextKey struct{}
 
+//从上下文获取客户端meta
 func GetClientMeta(ctx context.Context) *ClientMeta {
 	meta, ok := ctx.Value(ClientMetaContextKey{}).(*ClientMeta)
 	if !ok {
@@ -114,6 +120,7 @@ func GetClientMeta(ctx context.Context) *ClientMeta {
 	return meta
 }
 
+//保存客户端meta到上下文
 func SetClientMeta(ctx context.Context, meta *ClientMeta) context.Context {
 	return context.WithValue(ctx, ClientMetaContextKey{}, meta)
 }

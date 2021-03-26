@@ -4,19 +4,18 @@ import (
 	"context"
 	"google.golang.org/grpc/status"
 	"myRPC/const"
-	"myRPC/log/base"
 	"myRPC/meta"
 	"myRPC/middleware/base"
 	"myRPC/prometheus"
 	"time"
 )
 
+//监控中间件
 func PrometheusServiceMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			serverMeta := meta.GetServerMeta(ctx)
 			//监控调用量
-			logBase.Debug("PrometheusServiceMiddleware")
 			serverMetrics := prometheus.GetPrometheusManager().GetServerMetrics()
 			serverMetrics.IncRequest(ctx, serverMeta.ServiceName, serverMeta.ServiceMethod)
 			startTime := time.Now()
@@ -37,7 +36,6 @@ func PrometheusClientMiddleware() mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
 			clientMeta := meta.GetClientMeta(ctx)
-			logBase.Debug("PrometheusClientMiddleware")
 			clientMetrics := prometheus.GetPrometheusManager().GetClientMetrics()
 			//监控调用量
 			clientMetrics.IncRequest(ctx, clientMeta.ServiceName, clientMeta.ServiceMethod)

@@ -11,6 +11,7 @@ var dirList = []string{
 	"config",
 	"controller",
 	"proto",
+	"docs",
 	"logs",
 	"model",
 	"router",
@@ -19,6 +20,7 @@ var dirList = []string{
 	"test/config",
 }
 
+//目录生成器
 type generatorDir struct {}
 
 func NewGeneratorDir()(*generatorDir){
@@ -28,7 +30,8 @@ func NewGeneratorDir()(*generatorDir){
 func(g *generatorDir)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
 	for _,dir := range dirList{
 		fullPath := path.Join(opt.OutputPath,dir)
-		err := os.MkdirAll(fullPath,0755)
+		//分别创建文件
+		err := os.MkdirAll(fullPath,0777)
 		if err != nil {
 			return err
 		}

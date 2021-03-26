@@ -1,0 +1,14 @@
+client:
+  ip:
+    - 127.0.0.1
+    - 127.0.0.2
+    - 127.0.0.3
+  port:
+    9001
+service:
+  name:
+    "sign"
+  id:
+    2
+  type:
+    1001

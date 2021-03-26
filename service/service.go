@@ -29,13 +29,19 @@ import (
 	"os/signal"
 )
 
+//基础服务模块，所有服务的公共部分
 type CommonService struct {
+	//grpc服务对象
 	*grpc.Server
+	//服务配置对象
 	serviceConf *config.ServiceConf
+	//服务端限流器
 	limiter     limiter.LimitInterface
+	//http服务器
 	httpServer  *httpBase.HttpServer
 }
 
+//新建服务对象
 func NewService()(commonService *CommonService,err error) {
 	//创建公共服务对象
 	commonService = &CommonService{
@@ -52,11 +58,11 @@ func NewService()(commonService *CommonService,err error) {
 		return
 	}
 	fmt.Println("service serviceConf:",commonService.serviceConf)
+	//初始化各类对象
 	err = commonService.initHttp()
 	if err != nil {
 		return
 	}
-	//初始化
 	err = commonService.initLimit()
 	if err != nil {
 		return
@@ -85,11 +91,12 @@ func NewService()(commonService *CommonService,err error) {
 	if err != nil {
 		return
 	}
-
 	return commonService,nil
 }
 
+//服务的接口初始化
 func (commonService *CommonService)InitServiceFunc(reqCtx context.Context,serviceMethod string)(ctx context.Context,err error) {
+	//服务端执行中间件参数
 	serverMeta := &meta.ServerMeta{
 		Env:util.GetEnv(),
 		IDC:commonService.serviceConf.Base.ServiceIDC,
@@ -97,14 +104,17 @@ func (commonService *CommonService)InitServiceFunc(reqCtx context.Context,servic
 		ServiceName:commonService.serviceConf.Base.ServiceName,
 		ServiceMethod:serviceMethod,
 	}
+	//保存到上下文中
 	ctx = meta.SetServerMeta(reqCtx,serverMeta)
 	return ctx,nil
 }
 
+//执行服务
 func (commonService *CommonService)Run() {
 	logBase.Debug("init server start")
 	if commonService.httpServer != nil {
 		go func() {
+			//开启http服务
 			err := commonService.httpServer.Start()
 			if err != nil {
 				logBase.Fatal("start http err:%v",err)
@@ -117,6 +127,7 @@ func (commonService *CommonService)Run() {
 		logBase.Fatal("new listen err:%v",err)
 		return
 	}
+	//开启rpc服务
 	err = commonService.Server.Serve(listen)
 	if err != nil {
 		logBase.Fatal("start server err:%v",err)
@@ -124,6 +135,7 @@ func (commonService *CommonService)Run() {
 	}
 }
 
+//解析命令行可能传递的参数
 func (commonService *CommonService)initParams()(configDir string,serviceParams config.ServiceParams,err error)  {
 	serviceParams = config.ServiceParams{}
 	flag.StringVar(&configDir,"config","","service config path")
@@ -137,8 +149,10 @@ func (commonService *CommonService)initParams()(configDir string,serviceParams c
 	return "",serviceParams,nil
 }
 
+//初始化限流
 func (commonService *CommonService)initLimit()(err error) {
 	limitBase.InitLimit()
+	//服务端限流器
 	serverLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonService.serviceConf.ServerLimit.Type,
 		commonService.serviceConf.ServerLimit.Params.(map[interface{}]interface{}))
 	limitBase.GetLimitMgr().SetServerLimiter(serverLimiter)
@@ -146,6 +160,7 @@ func (commonService *CommonService)initLimit()(err error) {
 	if err != nil {
 		return err
 	}
+	//客户端限流器
 	clientLimiter,err := limitBase.GetLimitMgr().NewLimiter(commonService.serviceConf.ClientLimit.Type,
 		commonService.serviceConf.ClientLimit.Params.(map[interface{}]interface{}))
 	limitBase.GetLimitMgr().SetClientLimiter(clientLimiter)
@@ -155,6 +170,7 @@ func (commonService *CommonService)initLimit()(err error) {
 	return nil
 }
 
+//初始化日志
 func (commonService *CommonService)initLog()(err error) {
 	logBase.InitLogger(commonService.serviceConf.Log.SwitchOn,
 		commonService.serviceConf.Log.Level,
@@ -163,6 +179,7 @@ func (commonService *CommonService)initLog()(err error) {
 	return
 }
 
+//初始化注册中心
 func (commonService *CommonService)initRegistry()(err error) {
 	registryBase.InitRegistry()
 	_,err = registryBase.GetRegistryManager().NewRegister(commonService.serviceConf.Registry.Type,
@@ -185,10 +202,12 @@ func (commonService *CommonService)initRegistry()(err error) {
 			},
 		},
 	}
+	//起服的时候，注册当前服务到注册中心
 	err = registryBase.GetRegistryManager().RegisterServer(registerServer)
 	return err
 }
 
+//初始化追踪
 func (commonService *CommonService)initTrace()(err error) {
 	err = trace.InitTrace(commonService.serviceConf.Base.ServiceName,
 		commonService.serviceConf.Trace.ReportAddr,
@@ -200,14 +219,18 @@ func (commonService *CommonService)initTrace()(err error) {
 	return
 }
 
+//初始化监控
 func (commonService *CommonService)initPrometheus()(err error) {
 	err = prometheus.NewPrometheusManager(
+		//客户端监控频率
 		commonService.serviceConf.Prometheus.ClientHistogram,
+		//服务端监控频率
 		commonService.serviceConf.Prometheus.ServerHistogram)
 	if err != nil {
 		return err
 	}
 	if commonService.httpServer != nil {
+		//添加http接口调用
 		err = prometheus.GetPrometheusManager().AddPrometheusHandler(commonService.httpServer.GetRoute(),commonService.serviceConf)
 		if err != nil {
 			return err
@@ -216,12 +239,14 @@ func (commonService *CommonService)initPrometheus()(err error) {
 	return nil
 }
 
+//初始化负载均衡
 func (commonService *CommonService)initBalance()(error) {
 	balanceBase.InitBalance()
 	_,err := balanceBase.GetBalanceMgr().NewBalancer(commonService.serviceConf.Balance.Type)
 	return err
 }
 
+//初始化熔断
 func (commonService *CommonService)initHystrix()(error)  {
 	err := hystrix.InitHystrix(commonService.serviceConf.Base.ServiceName,
 		commonService.serviceConf.Hystrix.TimeOut,
@@ -233,6 +258,7 @@ func (commonService *CommonService)initHystrix()(error)  {
 	return err
 }
 
+//初始化http服务
 func (commonService *CommonService)initHttp()(err error)  {
 	if commonService.serviceConf.Http.SwitchOn {
 		httpServer,err := httpBase.NewHttpServer(commonService.serviceConf.Http.HttpPort)
@@ -240,12 +266,14 @@ func (commonService *CommonService)initHttp()(err error)  {
 			return err
 		}
 		commonService.httpServer = httpServer
+		//开启pprof性能监控
 		if commonService.serviceConf.Http.PprofSwitchOn {
 			err = httpServer.AddPropHandler()
 			if err != nil {
 				return err
 			}
 		}
+		//添加http配置修改
 		err = httpServer.AddParamsHandler(commonService.serviceConf)
 		if err != nil {
 			return err
@@ -258,22 +286,30 @@ func (commonService *CommonService)initHttp()(err error)  {
 func (commonService *CommonService)BuildServerMiddleware(handle mwBase.MiddleWareFunc,frontMiddles,backMiddles []mwBase.MiddleWare) mwBase.MiddleWareFunc {
 	var middles []mwBase.MiddleWare
 	serviceConf := commonService.serviceConf
+	//前置
 	middles = append(middles,frontMiddles...)
+	//日志
 	middles = append(middles, mwLog.LogServiceMiddleware())
+	//监控
 	if serviceConf.Prometheus.SwitchOn {
 		middles = append(middles, mwPrometheus.PrometheusServiceMiddleware())
 	}
+	//服务端限流
 	if serviceConf.ServerLimit.SwitchOn && commonService.limiter != nil{
 		middles = append(middles, mwLimit.ServerLimitMiddleware(commonService.limiter))
 	}
+	//追踪
 	if serviceConf.Trace.SwitchOn {
 		middles = append(middles, mwTrace.TraceServiceMiddleware())
 	}
+	//后置
 	middles = append(middles,backMiddles...)
 	m := mwBase.Chain(middles...)
+	//得到中间件链条，调用这个返回值会执行所有中间件
 	return m(handle)
 }
 
+//获取服务配置
 func (commonService *CommonService)GetServiceConf()(*config.ServiceConf) {
 	return commonService.serviceConf
 }
@@ -286,12 +322,14 @@ func (commonService *CommonService)GetHttpRouter()(router *mux.Router) {
 	return nil
 }
 
+//停止服务
 func (commonService *CommonService)Stop() {
 	stopChan := make(chan os.Signal)
 	//监听所有信号
 	signal.Notify(stopChan)
 	<- stopChan
 	logBase.Debug("server stop")
+	//各种组件释放资源
 	commonService.Server.Stop()
 	if commonService.httpServer != nil {
 		_ = commonService.httpServer.Stop()

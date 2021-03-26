@@ -8,6 +8,7 @@ import (
 	"text/template"
 )
 
+//根据目标生成main文件
 type generatorMain struct {}
 
 func NewGeneratorMain()(*generatorMain){
@@ -19,7 +20,7 @@ func(g *generatorMain)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData)
 	if util.IsFileExist(filename) {
 		return nil
 	}
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		return err
 	}

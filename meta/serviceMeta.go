@@ -3,7 +3,7 @@ package meta
 import (
 	"context"
 )
-
+//服务端中间件参数
 type ServerMeta struct {
 	Env           string  //环境
 	IDC           string  //机房

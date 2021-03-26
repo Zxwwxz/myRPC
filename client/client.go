@@ -33,10 +33,13 @@ type CommonClient struct {
 	register  register.RegisterInterface
 }
 
+//一般调用不同服务的不同次数，都会新建对象，但里面的限流器，负载均衡器和注册器都是服务启动时候创建的
 func NewClient(reqCtx context.Context,serviceName,serviceMethod string,callerMode int,clientConf *config.ServiceConf,options []meta.ClientMetaOption) (context.Context,*CommonClient,error) {
 	//初始配置
 	commonClient := &CommonClient{}
+	//A->B，A的配置
 	commonClient.clientConf = clientConf
+	//初始化各种组件
 	err := commonClient.initLimit()
 	if err != nil {
 		return nil,nil,err
@@ -49,6 +52,7 @@ func NewClient(reqCtx context.Context,serviceName,serviceMethod string,callerMod
 	if err != nil {
 		return nil,nil,err
 	}
+	//此次调用的参数
 	ctx,err := commonClient.initClientMeta(reqCtx,serviceName,serviceMethod,callerMode,options)
 	if err != nil {
 		return nil,nil,err

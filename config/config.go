@@ -167,6 +167,7 @@ func (serviceConf *ServiceConf)initDir(configDir string) (err error) {
 	return
 }
 
+//合并命令行配置
 func (serviceConf *ServiceConf)paramsMergeConfig(serviceParams ServiceParams) {
 	if serviceParams.ServiceType != 0 {
 		serviceConf.Base.ServiceType = serviceParams.ServiceType
@@ -188,6 +189,7 @@ func (serviceConf *ServiceConf)paramsMergeConfig(serviceParams ServiceParams) {
 	}
 }
 
+//合并http配置
 func (serviceConf *ServiceConf)HttpMergeConfig(serviceHttpParams ServiceHttpParams) {
 	serviceConf.Prometheus.SwitchOn = serviceHttpParams.PrometheusSwitchOn
 	serviceConf.Log.SwitchOn = serviceHttpParams.LogSwitchOn

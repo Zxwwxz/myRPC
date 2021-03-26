@@ -10,6 +10,7 @@ import (
 	"myRPC/middleware/base"
 )
 
+//客户端限流中间件
 func ClientLimitMiddleware(limiter limiter.LimitInterface) mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
@@ -24,6 +25,7 @@ func ClientLimitMiddleware(limiter limiter.LimitInterface) mwBase.MiddleWare {
 	}
 }
 
+//服务端限流中间件
 func ServerLimitMiddleware(limiter limiter.LimitInterface) mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {

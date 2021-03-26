@@ -10,9 +10,9 @@ const (
 	default_bucket_rate = 10
 	default_bucket_all_water = 100
 )
-
+//漏桶限流
 type BucketLimit struct {
-	rate       float64 //漏桶中水的漏出速率
+	rate       float64 //漏桶中水的漏出速率（每秒）
 	curWater   float64 //当前桶里面的水
 	allWater   float64 //漏桶最多能装的水大小
 	unixNano   int64   //unix时间戳
@@ -45,11 +45,14 @@ func (b *BucketLimit) reflesh() {
 	return
 }
 
+//是否通过
 func (b *BucketLimit) Allow() bool {
 	b.lock.Lock()
 	defer b.lock.Unlock()
+	//先漏水
 	b.reflesh()
 	if b.curWater < b.allWater {
+		//加水
 		b.curWater = b.curWater + 1
 		return true
 	}

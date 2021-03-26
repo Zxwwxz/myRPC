@@ -7,6 +7,7 @@ import (
     "text/template"
 )
 
+//测试服务生成器
 type generatorTest struct {}
 
 func NewGeneratorTest()(*generatorTest){
@@ -15,7 +16,7 @@ func NewGeneratorTest()(*generatorTest){
 
 func(g *generatorTest)Run(opt *toolsBase.Option,meta *toolsBase.ServiceMetaData) error{
     filename := path.Join(opt.OutputPath, "test/ServiceTest.go")
-    file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+    file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
     if err != nil {
         return err
     }

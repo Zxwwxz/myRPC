@@ -4,6 +4,7 @@ import (
 	"net"
 )
 
+//获取本地ip
 func GetLocalIP() (ip string) {
 	netInterfaces, err := net.Interfaces()
 	if err != nil {

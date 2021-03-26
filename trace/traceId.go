@@ -17,6 +17,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+//通过上下文获取追踪id
 func GetTraceId(ctx context.Context) (traceId string) {
 	traceId, ok := ctx.Value(traceIdKey{}).(string)
 	if !ok {
@@ -25,6 +26,7 @@ func GetTraceId(ctx context.Context) (traceId string) {
 	return
 }
 
+//生成追踪id
 func GenTraceId() (traceId string) {
 	now := time.Now()
 	traceId = fmt.Sprintf("%04d%02d%02d%02d%02d%02d%08d", now.Year(), now.Month(), now.Day(),
@@ -32,6 +34,7 @@ func GenTraceId() (traceId string) {
 	return
 }
 
+//存储追踪id到上下文
 func WithTraceId(ctx context.Context, traceId string) context.Context {
 	return context.WithValue(ctx, traceIdKey{}, traceId)
 }

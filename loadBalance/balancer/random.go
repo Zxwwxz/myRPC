@@ -7,6 +7,7 @@ import (
 	"myRPC/registry/register"
 )
 
+//随机选择
 type RandomBalance struct {
 	Name string
 }
@@ -26,7 +27,7 @@ func (r *RandomBalance)SelectNode(ctx context.Context,nodes []*register.Node,par
 	if nodeCount == 0 {
 		return nil,errors.New("nodes nil")
 	}
-
+	//随机即可
 	randNum := rand.Intn(nodeCount)
 	return nodes[randNum],nil
 }

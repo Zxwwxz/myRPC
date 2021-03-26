@@ -6,7 +6,7 @@ import (
     _ "net/http/pprof"
 )
 
-func counter() {
+func counterHttp() {
     slice := make([]int, 0)
     c := 1
     for i := 0; i < 100000; i++ {
@@ -17,13 +17,13 @@ func counter() {
 
 func workForever() {
     for {
-        go counter()
+        go counterHttp()
         time.Sleep(1 * time.Second)
     }
 }
 
 func httpGet(w http.ResponseWriter, r *http.Request) {
-    counter()
+    counterHttp()
 }
 
 func main() {

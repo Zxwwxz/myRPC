@@ -9,6 +9,7 @@ import (
 	"myRPC/registry/register"
 )
 
+//服务发现中间件
 func DiscoveryMiddleware(discovery register.RegisterInterface) mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
@@ -19,8 +20,10 @@ func DiscoveryMiddleware(discovery register.RegisterInterface) mwBase.MiddleWare
 				return nil,rpcConst.NotFoundNode
 			}
 			logBase.Debug("DiscoveryMiddleware,service=%v",service)
+			//服务路由：根据模式找到符合要求的节点集合
 			allNode := getAllNodes(clientMeta,service)
 			logBase.Debug("DiscoveryMiddleware,allNode=%v",allNode)
+			//保存节点
 			clientMeta.AllNodes = allNode
 			return next(ctx, req)
 		}

@@ -13,6 +13,7 @@ const (
 	LineSep            = "\n"
 )
 
+//每次打印的日志数据
 type LogData struct {
 	//日志等级
 	level       string
@@ -40,12 +41,13 @@ func (l *LogData)GetLevel()string {
 	return l.level
 }
 
+//写入一类信息
 func (l *LogData)writeField(buffer *bytes.Buffer, field, sep string) {
 	buffer.WriteString(field)
 	buffer.WriteString(sep)
 }
 
-//[2020-08-20 08:00:00:000][堆栈]内容
+//[日志等级] [2020-08-20 08:00:00:000] [文件名:行号] 内容
 func (l *LogData) Bytes() []byte {
 	var buffer bytes.Buffer
 	l.writeField(&buffer, fmt.Sprintf("[%s]",l.level), SpaceSep)
@@ -55,6 +57,7 @@ func (l *LogData) Bytes() []byte {
 	return buffer.Bytes()
 }
 
+//获取行号
 func GetLineInfo() (fileName string, lineNo int) {
 	_, fileName, lineNo, _ = runtime.Caller(3)
 	return

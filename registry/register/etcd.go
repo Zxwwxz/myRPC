@@ -89,6 +89,7 @@ func NewEtcdRegister(params map[interface{}]interface{})(*EtcdRegister,error) {
 	if updateTime == 0{
 		updateTime = default_update_time
 	}
+	//创建etcd客户端
 	etcdClient,err := clientv3.New(clientv3.Config{
 		Endpoints:[]string{addr},
 		DialTimeout:time.Duration(timeout)*time.Second,

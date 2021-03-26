@@ -12,9 +12,13 @@ import (
     "strconv"
 )
 
+//http对象
 type HttpServer struct {
+    //tcp监听器
     listener  net.Listener
+    //http服务器
     server    *http.Server
+    //服务路径路由
     router    *mux.Router
 }
 
@@ -28,12 +32,15 @@ func NewHttpServer(port int) (httpServer *HttpServer,err error) {
     return httpServer,nil
 }
 
+//开启
 func (httpServer *HttpServer)Start()(err error)  {
     server := &http.Server{Handler:httpServer.router}
     httpServer.server = server
+    //开启http
     return server.Serve(httpServer.listener)
 }
 
+//停止
 func (httpServer *HttpServer)Stop()(err error)  {
     if httpServer.server != nil {
         return httpServer.server.Shutdown(context.TODO())
@@ -41,10 +48,12 @@ func (httpServer *HttpServer)Stop()(err error)  {
     return nil
 }
 
+//获取路由，要在起服前就获取，进行添加路由
 func (httpServer *HttpServer)GetRoute()(router *mux.Router)  {
     return httpServer.router
 }
 
+//默认开启的服务路由
 func (httpServer *HttpServer)AddPropHandler()(err error)  {
     httpServer.router.HandleFunc("/debug/pprof/", pprof.Index)
     httpServer.router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -54,6 +63,7 @@ func (httpServer *HttpServer)AddPropHandler()(err error)  {
     return nil
 }
 
+//监听参数修改
 func (httpServer *HttpServer)AddParamsHandler(serviceConf *config.ServiceConf)(err error)  {
     httpServer.router.HandleFunc("/params", func(w http.ResponseWriter, r *http.Request){
         serviceHttpParams := config.ServiceHttpParams{}

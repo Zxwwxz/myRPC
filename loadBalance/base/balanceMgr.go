@@ -21,6 +21,7 @@ func GetBalanceMgr()*BalanceManager {
 	return balanceManager
 }
 
+//获取当前负载均衡器
 func GetCurBalancer()(balancer.BalanceInterface){
 	if balanceManager != nil {
 		return balanceManager.curBalancer

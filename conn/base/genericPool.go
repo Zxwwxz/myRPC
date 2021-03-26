@@ -38,15 +38,17 @@ func NewGenericPool(minOpen, maxOpen int, maxLifetime int64, factory factory) (*
         factory:     factory,
         pool:        make(chan io.Closer, maxOpen),
     }
-    //先创建最少的
-    for i := 0; i < minOpen; i++ {
-        closer, err := factory()
-        if err != nil {
-            continue
+    go func() {
+        //先创建最少的
+        for i := 0; i < minOpen; i++ {
+            closer, err := factory()
+            if err != nil {
+                continue
+            }
+            p.numOpen++
+            p.pool <- closer
         }
-        p.numOpen++
-        p.pool <- closer
-    }
+    }()
     return p, nil
 }
 

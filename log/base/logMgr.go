@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+//日志等级
 const (
 	log_type_debug = "debug"
 	log_type_info = "info"
@@ -25,11 +26,17 @@ var (
 
 //日志管理器
 type LogMgr struct {
+	//开关
 	switchOn    bool
+	//每个等级字符转数字
 	logType     map[string]int
+	//每个等级日志对象
 	loggers     map[string]logger.LoggerInterface
+	//日志通道大小
 	chanSize    int
+	//当前等级
 	level       string
+	//日志打印通道
 	logDataChan chan *logger.LogData
 }
 
@@ -45,9 +52,11 @@ func InitLogger(switchOn bool,level string, chanSize int,params map[interface{}]
 		logMgr.chanSize = chanSize
 	}
 	logMgr.switchOn = switchOn
+	//设置日志等级
 	_ = logMgr.SetLevel(level)
 	logMgr.logType = map[string]int{log_type_debug:1,log_type_info:2,log_type_warn:3,log_type_fatal:4}
 	logMgr.loggers = make(map[string]logger.LoggerInterface,len(logMgr.logType))
+	//新增日志等级对象
 	logMgr.addLogger(params)
 	go logMgr.run()
 }
@@ -87,6 +96,7 @@ func (l *LogMgr)SetLevel(level string)(error) {
 
 //添加不同等级的日志打印对象
 func (l *LogMgr)addLogger(params map[interface{}]interface{}) {
+	//如果想做不同等级的日志合并，那就这里不要创建多个对象，所有等级指向通过对象
 	for logType,_ := range logMgr.logType{
 		tempLogger,err := logger.NewFileOutputer(params,logType)
 		if err != nil{
@@ -121,9 +131,11 @@ func writeLog(level string, format string, args ...interface{}) {
 	if reqLevel < mgrLevel {
 		return
 	}
+	//获取正在执行的文件名和行号
 	fileName, lineNo := logger.GetLineInfo()
 	fileName = path.Base(fileName)
 	msg := fmt.Sprintf(format, args...)
+	//创建日志内容对象，放到通道中
 	logData := logger.NewLogData(msg,level,fileName,lineNo,time.Now())
 	select {
 	case logMgr.logDataChan <- logData:

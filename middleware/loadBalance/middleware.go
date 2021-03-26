@@ -9,6 +9,7 @@ import (
 	"myRPC/middleware/base"
 )
 
+//负载均衡中间件
 func LoadBalanceMiddleware(balancer balancer.BalanceInterface) mwBase.MiddleWare {
 	return func(next mwBase.MiddleWareFunc) mwBase.MiddleWareFunc {
 		return func(ctx context.Context, req interface{}) (resp interface{}, err error) {
@@ -17,6 +18,7 @@ func LoadBalanceMiddleware(balancer balancer.BalanceInterface) mwBase.MiddleWare
 				return nil,rpcConst.NotFoundNode
 			}
 			clientMeta.RemainNodes = nil
+			//剩余节点=所有可用节点，拷贝一份因为只是当前调用使用
 			for _,v := range clientMeta.AllNodes {
 				clientMeta.RemainNodes = append(clientMeta.RemainNodes,v)
 			}

@@ -14,8 +14,11 @@ const (
 )
 
 type Metrics struct {
+	//请求数
 	requestCounter    *prometheus.CounterVec
+	//错误数
 	errcodeCounter    *prometheus.CounterVec
+	//请求耗时
 	latencyHistogram  *prometheus.HistogramVec
 }
 
@@ -25,6 +28,7 @@ func NewMetrics(clientHistogram,serverHistogram string)(*Metrics,*Metrics)  {
 	return defaultClientMetrics,defaultServerMetrics
 }
 
+//请求耗时的采样率参数
 func getHistogram(histogram string)(start,width float64,count int)  {
 	start = default_start
 	width = default_width
@@ -61,6 +65,7 @@ func newServerMetrics(start,width float64,count int) *Metrics {
 			Help:       "RPC latency distributions.",
 			Buckets:    prometheus.LinearBuckets(start,width,count),
 		}, []string{"service", "method"})
+	//注册指标
 	prometheus.MustRegister(requestCounter,errcodeCounter,latencyHistogram)
 	return &Metrics{
 		requestCounter: requestCounter,
@@ -93,14 +98,17 @@ func newClientMetrics(start,width float64,count int) *Metrics {
 	}
 }
 
+//增加某服务，某接口的请求数
 func (m *Metrics) IncRequest(ctx context.Context, serviceName, methodName string) {
 	m.requestCounter.WithLabelValues(serviceName, methodName).Inc()
 }
 
+//增加某服务，某接口，服务端还是客户端，哪个错误码的错误数
 func (m *Metrics) IncErrcode(ctx context.Context, serviceName, methodName string, incType string, code int) {
 	m.errcodeCounter.WithLabelValues(serviceName, methodName, incType, strconv.Itoa(code)).Inc()
 }
 
+//增加某服务，某接口的调用时间
 func (m *Metrics) ObserveLatency(ctx context.Context, serviceName, methodName string, useTime int64) {
 	m.latencyHistogram.WithLabelValues(serviceName, methodName).Observe(float64(useTime))
 }
